@@ -14,7 +14,7 @@ RUN npm run build
 
 
 ############################################
-# 2️⃣ PHP Stage (Render-safe)
+# 2️⃣ PHP Stage
 ############################################
 FROM php:8.3-cli-alpine
 
@@ -32,6 +32,7 @@ RUN apk add --no-cache \
     libjpeg-turbo-dev \
     freetype-dev \
     libxml2-dev \
+    libzip-dev \
     oniguruma-dev \
     postgresql-dev \
     sqlite-dev \
@@ -55,7 +56,7 @@ RUN docker-php-ext-configure gd \
     xml \
     zip
 
-# Remove build deps to reduce image size
+# Remove build deps
 RUN apk del $PHPIZE_DEPS
 
 ############################################
@@ -67,8 +68,6 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy application
 ############################################
 COPY . .
-
-# Copy built assets
 COPY --from=node_builder /app/public ./public
 
 ############################################
