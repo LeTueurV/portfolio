@@ -79,6 +79,13 @@ COPY --from=node_builder /app/public ./public
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 ############################################
+# Laravel optimization for production
+############################################
+RUN php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
+
+############################################
 # Permissions
 ############################################
 RUN chmod -R 775 storage bootstrap/cache
@@ -87,6 +94,12 @@ RUN chmod -R 775 storage bootstrap/cache
 # Create storage symlink
 ############################################
 RUN php artisan storage:link
+
+############################################
+# Environment variables for production
+############################################
+ENV APP_ENV=production
+ENV APP_DEBUG=false
 
 ############################################
 # Render dynamic port
