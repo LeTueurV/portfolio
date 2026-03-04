@@ -14,7 +14,7 @@ RUN npm run build
 
 
 ############################################
-# 2️⃣ PHP Stage
+# 2️⃣ PHP Stage (Render-safe)
 ############################################
 FROM php:8.3-cli-alpine
 
@@ -34,6 +34,7 @@ RUN apk add --no-cache \
     postgresql-dev \
     sqlite-dev \
     mysql-client \
+    oniguruma-dev \
     $PHPIZE_DEPS
 
 ############################################
@@ -80,12 +81,12 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 RUN chmod -R 775 storage bootstrap/cache
 
 ############################################
-# Render uses dynamic PORT
+# Render dynamic port
 ############################################
 ENV PORT=10000
 EXPOSE 10000
 
 ############################################
-# Start Laravel (important: use $PORT)
+# Start Laravel
 ############################################
 CMD php artisan serve --host=0.0.0.0 --port=$PORT
