@@ -69,9 +69,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 ############################################
 # Copy application
-############################################
-COPY . .
-COPY --from=node_builder /app/public ./public
+
+COPY --from=node_builder /app/public/build ./public/build
 
 ############################################
 # Install Laravel dependencies
