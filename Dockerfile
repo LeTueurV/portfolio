@@ -9,8 +9,11 @@ COPY package*.json ./
 RUN npm install
 
 COPY resources ./resources
+COPY public ./public
 COPY vite.config.js tsconfig.json* ./
-RUN npm run build
+
+ENV NODE_ENV=production
+RUN npm run build && ls -la public/build/
 
 
 ############################################
