@@ -94,7 +94,6 @@ RUN php artisan storage:link
 ENV PORT=10000
 EXPOSE 10000
 
-RUN npm run build
 
 ############################################
 # Start Laravel
