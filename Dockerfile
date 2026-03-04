@@ -84,6 +84,11 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 RUN chmod -R 775 storage bootstrap/cache
 
 ############################################
+# Create storage symlink
+############################################
+RUN php artisan storage:link
+
+############################################
 # Render dynamic port
 ############################################
 ENV PORT=10000
