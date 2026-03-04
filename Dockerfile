@@ -31,10 +31,11 @@ RUN apk add --no-cache \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
+    libxml2-dev \
+    oniguruma-dev \
     postgresql-dev \
     sqlite-dev \
     mysql-client \
-    oniguruma-dev \
     $PHPIZE_DEPS
 
 ############################################
