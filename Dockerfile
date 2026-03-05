@@ -75,9 +75,8 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 
 ############################################
 # Copy application
-############################################
-COPY . .
-COPY --from=node_builder /app/public ./public
+
+COPY --from=node_builder /app/public/build ./public/build
 
 ############################################
 # Permissions
