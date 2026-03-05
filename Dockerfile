@@ -10,7 +10,7 @@ RUN npm install
 
 COPY resources ./resources
 COPY public ./public
-COPY vite.config.js tsconfig.json* ./
+COPY vite.config.js tailwind.config.js tsconfig.json* ./
 
 ENV NODE_ENV=production
 RUN npm run build && ls -la public/build/
