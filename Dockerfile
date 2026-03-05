@@ -68,15 +68,15 @@ RUN apk del $PHPIZE_DEPS
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 ############################################
-# Copy composer files and install dependencies
-############################################
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
-############################################
 # Copy application
-
+############################################
+COPY . .
 COPY --from=node_builder /app/public/build ./public/build
+
+############################################
+# Install Laravel dependencies
+############################################
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 ############################################
 # Permissions
