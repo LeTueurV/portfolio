@@ -6,14 +6,15 @@ FROM node:20-alpine AS node_builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci --prefer-offline --no-audit
 
 COPY resources ./resources
 COPY public ./public
 COPY vite.config.js tailwind.config.js tsconfig.json* ./
 
 ENV NODE_ENV=production
-RUN npm run build && ls -la public/build/
+RUN npm run build
+RUN ls -la public/build/
 
 
 ############################################
