@@ -70,4 +70,26 @@ class ApiController extends Controller
             'realisationsByCompany' => $realisationsByCompany
         ]);
     }
+
+    public function projectDetail(int $id): JsonResponse
+    {
+        $project = Project::with(['tags', 'competences', 'company', 'images'])->find($id);
+
+        if (!$project) {
+            return response()->json(['error' => 'Projet non trouvé'], 404);
+        }
+
+        return response()->json($project);
+    }
+
+    public function realisationDetail(int $id): JsonResponse
+    {
+        $realisation = Realisation::with(['tags', 'company', 'images'])->find($id);
+
+        if (!$realisation) {
+            return response()->json(['error' => 'Réalisation non trouvée'], 404);
+        }
+
+        return response()->json($realisation);
+    }
 }

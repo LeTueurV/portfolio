@@ -27,6 +27,11 @@ class Project extends Model
         return $this->hasMany(ProjectTag::class);
     }
 
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProjectImage::class)->orderBy('order');
+    }
+
     public function competences(): BelongsToMany
     {
         return $this->belongsToMany(Competence::class, 'competence_project');

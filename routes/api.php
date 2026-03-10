@@ -16,7 +16,9 @@ Route::get('/ping', function () {
 Route::get('/portfolio', [ApiController::class, 'portfolio']);
 Route::get('/stages', [ApiController::class, 'stages']);
 Route::get('/projects', [ApiController::class, 'projects']);
+Route::get('/projects/{id}', [ApiController::class, 'projectDetail']);
 Route::get('/realisations', [ApiController::class, 'realisations']);
+Route::get('/realisations/{id}', [ApiController::class, 'realisationDetail']);
 Route::get('/companies', [ApiController::class, 'companies']);
 Route::get('/competences', [ApiController::class, 'competences']);
 

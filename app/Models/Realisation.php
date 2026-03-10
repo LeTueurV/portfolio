@@ -25,6 +25,11 @@ class Realisation extends Model
         return $this->hasMany(RealisationTag::class);
     }
 
+    public function images(): HasMany
+    {
+        return $this->hasMany(RealisationImage::class)->orderBy('order');
+    }
+
     public function getTagsArrayAttribute(): array
     {
         return $this->tags->pluck('tag')->toArray();
