@@ -80,6 +80,11 @@ COPY --from=node_builder /app/public/build ./public/build
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 ############################################
+# Create storage directories for images
+############################################
+RUN mkdir -p storage/app/public/projects storage/app/public/realisations
+
+############################################
 # Permissions
 ############################################
 RUN chmod -R 775 storage bootstrap/cache

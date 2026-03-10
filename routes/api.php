@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\ImageUploadController;
 
 // Route ping pour garder le serveur éveillé
 Route::get('/ping', function () {
@@ -24,3 +25,18 @@ Route::get('/competences', [ApiController::class, 'competences']);
 
 // Route complète avec toutes les données
 Route::get('/all', [ApiController::class, 'all']);
+
+// Routes pour l'upload d'images
+Route::prefix('images')->group(function () {
+    // Images de projets
+    Route::get('/projects/{projectId}', [ImageUploadController::class, 'listProjectImages']);
+    Route::post('/projects/{projectId}', [ImageUploadController::class, 'uploadProjectImage']);
+    Route::delete('/projects/image/{imageId}', [ImageUploadController::class, 'deleteProjectImage']);
+    Route::put('/projects/{projectId}/order', [ImageUploadController::class, 'updateProjectImagesOrder']);
+
+    // Images de réalisations
+    Route::get('/realisations/{realisationId}', [ImageUploadController::class, 'listRealisationImages']);
+    Route::post('/realisations/{realisationId}', [ImageUploadController::class, 'uploadRealisationImage']);
+    Route::delete('/realisations/image/{imageId}', [ImageUploadController::class, 'deleteRealisationImage']);
+    Route::put('/realisations/{realisationId}/order', [ImageUploadController::class, 'updateRealisationImagesOrder']);
+});
