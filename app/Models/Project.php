@@ -14,6 +14,7 @@ class Project extends Model
         'title',
         'type',
         'description',
+        'long_description',
         'year',
     ];
 

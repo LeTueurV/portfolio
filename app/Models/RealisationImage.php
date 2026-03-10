@@ -11,6 +11,7 @@ class RealisationImage extends Model
         'realisation_id',
         'image_url',
         'caption',
+        'description',
         'order',
     ];
 

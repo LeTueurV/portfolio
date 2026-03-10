@@ -13,6 +13,7 @@ class Realisation extends Model
         'company_id',
         'title',
         'description',
+        'long_description',
     ];
 
     public function company(): BelongsTo

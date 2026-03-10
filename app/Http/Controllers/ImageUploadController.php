@@ -21,6 +21,7 @@ class ImageUploadController extends Controller
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'caption' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:5000',
         ]);
 
         $project = Project::find($projectId);
@@ -38,6 +39,7 @@ class ImageUploadController extends Controller
             'project_id' => $projectId,
             'image_url' => '/storage/' . $path,
             'caption' => $request->input('caption'),
+            'description' => $request->input('description'),
             'order' => $maxOrder + 1,
         ]);
 
@@ -55,6 +57,7 @@ class ImageUploadController extends Controller
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'caption' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:5000',
         ]);
 
         $realisation = Realisation::find($realisationId);
@@ -72,6 +75,7 @@ class ImageUploadController extends Controller
             'realisation_id' => $realisationId,
             'image_url' => '/storage/' . $path,
             'caption' => $request->input('caption'),
+            'description' => $request->input('description'),
             'order' => $maxOrder + 1,
         ]);
 
@@ -183,5 +187,53 @@ class ImageUploadController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Mettre à jour la description longue d'un projet
+     */
+    public function updateProjectLongDescription(Request $request, int $projectId): JsonResponse
+    {
+        $request->validate([
+            'long_description' => 'nullable|string|max:10000',
+        ]);
+
+        $project = Project::find($projectId);
+        if (!$project) {
+            return response()->json(['error' => 'Projet non trouvé'], 404);
+        }
+
+        $project->update([
+            'long_description' => $request->input('long_description'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'project' => $project,
+        ]);
+    }
+
+    /**
+     * Mettre à jour la description longue d'une réalisation
+     */
+    public function updateRealisationLongDescription(Request $request, int $realisationId): JsonResponse
+    {
+        $request->validate([
+            'long_description' => 'nullable|string|max:10000',
+        ]);
+
+        $realisation = Realisation::find($realisationId);
+        if (!$realisation) {
+            return response()->json(['error' => 'Réalisation non trouvée'], 404);
+        }
+
+        $realisation->update([
+            'long_description' => $request->input('long_description'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'realisation' => $realisation,
+        ]);
     }
 }

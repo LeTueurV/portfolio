@@ -11,6 +11,7 @@ class ProjectImage extends Model
         'project_id',
         'image_url',
         'caption',
+        'description',
         'order',
     ];
 

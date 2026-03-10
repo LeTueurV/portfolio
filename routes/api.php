@@ -18,8 +18,10 @@ Route::get('/portfolio', [ApiController::class, 'portfolio']);
 Route::get('/stages', [ApiController::class, 'stages']);
 Route::get('/projects', [ApiController::class, 'projects']);
 Route::get('/projects/{id}', [ApiController::class, 'projectDetail']);
+Route::put('/projects/{id}/description', [ImageUploadController::class, 'updateProjectLongDescription']);
 Route::get('/realisations', [ApiController::class, 'realisations']);
 Route::get('/realisations/{id}', [ApiController::class, 'realisationDetail']);
+Route::put('/realisations/{id}/description', [ImageUploadController::class, 'updateRealisationLongDescription']);
 Route::get('/companies', [ApiController::class, 'companies']);
 Route::get('/competences', [ApiController::class, 'competences']);
 
