@@ -20,6 +20,7 @@ Route::get('/ping', function () {
 
 Route::get('/portfolio', [ApiController::class, 'portfolio']);
 Route::get('/stages', [ApiController::class, 'stages']);
+Route::get('/formations', [DashboardApiController::class, 'listFormations']);
 Route::get('/projects', [ApiController::class, 'projects']);
 Route::get('/projects/{id}', [ApiController::class, 'projectDetail']);
 Route::get('/realisations', [ApiController::class, 'realisations']);
@@ -88,6 +89,13 @@ Route::prefix('dashboard')->group(function () {
     Route::put('/messages/{id}', [DashboardApiController::class, 'updateMessage']);
     Route::patch('/messages/{id}/toggle', [DashboardApiController::class, 'toggleMessage']);
     Route::delete('/messages/{id}', [DashboardApiController::class, 'deleteMessage']);
+
+    // Formations (Parcours/Diplômes)
+    Route::get('/formations', [DashboardApiController::class, 'listFormations']);
+    Route::get('/formations/{id}', [DashboardApiController::class, 'getFormation']);
+    Route::post('/formations', [DashboardApiController::class, 'createFormation']);
+    Route::put('/formations/{id}', [DashboardApiController::class, 'updateFormation']);
+    Route::delete('/formations/{id}', [DashboardApiController::class, 'deleteFormation']);
 });
 
 // ==========================================

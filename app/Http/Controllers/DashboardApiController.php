@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\Models\Competence;
+use App\Models\Formation;
 use App\Models\ImportantMessage;
 use App\Models\Portfolio;
 use App\Models\Project;
@@ -902,6 +903,7 @@ class DashboardApiController extends Controller
             'data' => [
                 'companies_count' => Company::count(),
                 'stages_count' => Stage::count(),
+                'formations_count' => Formation::count(),
                 'projects_count' => Project::count(),
                 'realisations_count' => Realisation::count(),
                 'competences_count' => Competence::count(),
@@ -1088,6 +1090,144 @@ class DashboardApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Message supprimé avec succès'
+        ]);
+    }
+
+    // ==========================================
+    // FORMATIONS (Parcours/Diplômes)
+    // ==========================================
+
+    /**
+     * Lister toutes les formations
+     */
+    public function listFormations(): JsonResponse
+    {
+        $formations = Formation::ordered()->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $formations
+        ]);
+    }
+
+    /**
+     * Récupérer une formation par ID
+     */
+    public function getFormation(int $id): JsonResponse
+    {
+        $formation = Formation::find($id);
+
+        if (!$formation) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Formation non trouvée'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $formation
+        ]);
+    }
+
+    /**
+     * Créer une formation
+     */
+    public function createFormation(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'school' => 'required|string|max:255',
+            'location' => 'nullable|string|max:255',
+            'degree_type' => 'nullable|string|max:100',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'is_current' => 'nullable|boolean',
+            'description' => 'nullable|string|max:5000',
+            'logo_url' => 'nullable|string|max:500',
+            'diploma_url' => 'nullable|string|max:500',
+            'order' => 'nullable|integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $formation = Formation::create($validator->validated());
+
+        return response()->json([
+            'success' => true,
+            'data' => $formation,
+            'message' => 'Formation créée avec succès'
+        ], 201);
+    }
+
+    /**
+     * Mettre à jour une formation
+     */
+    public function updateFormation(Request $request, int $id): JsonResponse
+    {
+        $formation = Formation::find($id);
+
+        if (!$formation) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Formation non trouvée'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'title' => 'sometimes|string|max:255',
+            'school' => 'sometimes|string|max:255',
+            'location' => 'nullable|string|max:255',
+            'degree_type' => 'nullable|string|max:100',
+            'start_date' => 'sometimes|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'is_current' => 'nullable|boolean',
+            'description' => 'nullable|string|max:5000',
+            'logo_url' => 'nullable|string|max:500',
+            'diploma_url' => 'nullable|string|max:500',
+            'order' => 'nullable|integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $formation->update($validator->validated());
+
+        return response()->json([
+            'success' => true,
+            'data' => $formation,
+            'message' => 'Formation mise à jour avec succès'
+        ]);
+    }
+
+    /**
+     * Supprimer une formation
+     */
+    public function deleteFormation(int $id): JsonResponse
+    {
+        $formation = Formation::find($id);
+
+        if (!$formation) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Formation non trouvée'
+            ], 404);
+        }
+
+        $formation->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Formation supprimée avec succès'
         ]);
     }
 }

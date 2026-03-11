@@ -53,6 +53,7 @@ Ces routes sont destinées à l'affichage public du portfolio.
 | GET | `/ping` | Vérifier si le serveur est actif |
 | GET | `/portfolio` | Informations du portfolio |
 | GET | `/stages` | Liste des stages |
+| GET | `/formations` | Liste des formations/diplômes |
 | GET | `/projects` | Liste des projets |
 | GET | `/projects/{id}` | Détail d'un projet |
 | GET | `/realisations` | Liste des réalisations |
@@ -84,6 +85,7 @@ Récupère les statistiques globales du dashboard.
     "data": {
         "companies_count": 5,
         "stages_count": 3,
+        "formations_count": 4,
         "projects_count": 12,
         "realisations_count": 8,
         "competences_count": 15,
@@ -323,7 +325,109 @@ Supprime un stage.
 
 ---
 
-## 🎯 Competences
+## � Formations (Parcours/Diplômes)
+
+### GET `/dashboard/formations`
+
+Liste toutes les formations (parcours scolaire, diplômes).
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "title": "BTS SIO option SLAM",
+            "school": "Lycée Exemple",
+            "location": "Paris, France",
+            "degree_type": "BTS",
+            "start_date": "2023-09-01",
+            "end_date": "2025-06-30",
+            "is_current": false,
+            "description": "Formation en développement d'applications...",
+            "logo_url": "/storage/formations/lycee.jpg",
+            "diploma_url": null,
+            "order": 0,
+            "period": "2023 — 2025",
+            "created_at": "2025-03-11T10:00:00.000000Z",
+            "updated_at": "2025-03-11T10:00:00.000000Z"
+        },
+        {
+            "id": 2,
+            "title": "Licence Pro Développement Web",
+            "school": "Université XYZ",
+            "location": "Lyon, France",
+            "degree_type": "Licence",
+            "start_date": "2025-09-01",
+            "end_date": null,
+            "is_current": true,
+            "description": "Formation en cours...",
+            "logo_url": null,
+            "diploma_url": null,
+            "order": 1,
+            "period": "2025 — En cours",
+            "created_at": "2025-03-11T10:00:00.000000Z",
+            "updated_at": "2025-03-11T10:00:00.000000Z"
+        }
+    ]
+}
+```
+
+### GET `/dashboard/formations/{id}`
+
+Récupère une formation par ID.
+
+### POST `/dashboard/formations`
+
+Crée une formation.
+
+**Body (JSON) :**
+
+```json
+{
+    "title": "BTS SIO option SLAM",
+    "school": "Lycée Exemple",
+    "location": "Paris, France",
+    "degree_type": "BTS",
+    "start_date": "2023-09-01",
+    "end_date": "2025-06-30",
+    "is_current": false,
+    "description": "Formation en développement d'applications",
+    "logo_url": "/storage/formations/logo.jpg",
+    "diploma_url": null,
+    "order": 0
+}
+```
+
+**Champs :**
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| title | string | ✅ | Titre du diplôme (ex: "BTS SIO SLAM") |
+| school | string | ✅ | Nom de l'établissement |
+| location | string | ❌ | Localisation |
+| degree_type | string | ❌ | Type: BTS, Licence, Master, BAC, etc. |
+| start_date | date | ✅ | Date de début (YYYY-MM-DD) |
+| end_date | date | ❌ | Date de fin (null si en cours) |
+| is_current | boolean | ❌ | Formation en cours ? (défaut: false) |
+| description | string | ❌ | Description |
+| logo_url | string | ❌ | URL du logo de l'école |
+| diploma_url | string | ❌ | URL du diplôme (PDF) |
+| order | integer | ❌ | Ordre d'affichage |
+
+### PUT `/dashboard/formations/{id}`
+
+Met à jour une formation (mêmes champs, tous optionnels sauf title/school).
+
+### DELETE `/dashboard/formations/{id}`
+
+Supprime une formation.
+
+---
+
+## �🎯 Competences
 
 ### GET `/dashboard/competences`
 
@@ -885,6 +989,7 @@ const { data } = await api.delete('/dashboard/projects/1');
 | Portfolio | GET /dashboard/portfolio | - | - | PUT /dashboard/portfolio | - |
 | Companies | GET /dashboard/companies | GET /dashboard/companies/{id} | POST /dashboard/companies | PUT /dashboard/companies/{id} | DELETE /dashboard/companies/{id} |
 | Stages | GET /dashboard/stages | GET /dashboard/stages/{id} | POST /dashboard/stages | PUT /dashboard/stages/{id} | DELETE /dashboard/stages/{id} |
+| Formations | GET /dashboard/formations | GET /dashboard/formations/{id} | POST /dashboard/formations | PUT /dashboard/formations/{id} | DELETE /dashboard/formations/{id} |
 | Competences | GET /dashboard/competences | GET /dashboard/competences/{id} | POST /dashboard/competences | PUT /dashboard/competences/{id} | DELETE /dashboard/competences/{id} |
 | Projects | GET /dashboard/projects | GET /dashboard/projects/{id} | POST /dashboard/projects | PUT /dashboard/projects/{id} | DELETE /dashboard/projects/{id} |
 | Realisations | GET /dashboard/realisations | GET /dashboard/realisations/{id} | POST /dashboard/realisations | PUT /dashboard/realisations/{id} | DELETE /dashboard/realisations/{id} |
