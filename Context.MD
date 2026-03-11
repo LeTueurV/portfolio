@@ -59,6 +59,7 @@ Ces routes sont destinées à l'affichage public du portfolio.
 | GET | `/realisations/{id}` | Détail d'une réalisation |
 | GET | `/companies` | Liste des entreprises |
 | GET | `/competences` | Liste des compétences |
+| GET | `/messages` | Messages importants actifs |
 | GET | `/all` | Toutes les données en une requête |
 
 ---
@@ -86,6 +87,8 @@ Récupère les statistiques globales du dashboard.
         "projects_count": 12,
         "realisations_count": 8,
         "competences_count": 15,
+        "messages_count": 2,
+        "active_messages_count": 1,
         "recent_projects": [...],
         "recent_realisations": [...]
     }
@@ -566,7 +569,108 @@ Supprime une réalisation.
 
 ---
 
-## 🖼️ Images
+## � Important Messages
+
+Messages importants à afficher sur le portfolio (ex: "Je recherche un stage", "Disponible pour alternance").
+
+### GET `/dashboard/messages`
+
+Liste tous les messages (actifs et inactifs) pour le dashboard.
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "title": "Recherche de stage",
+            "message": "Je suis actuellement à la recherche d'un stage de 6 mois en développement web à partir de septembre 2026.",
+            "type": "urgent",
+            "icon": "briefcase",
+            "link_url": "mailto:contact@example.com",
+            "link_text": "Me contacter",
+            "is_active": true,
+            "order": 0,
+            "start_date": null,
+            "end_date": "2026-09-01T00:00:00.000000Z",
+            "created_at": "2025-03-11T10:00:00.000000Z",
+            "updated_at": "2025-03-11T10:00:00.000000Z"
+        }
+    ]
+}
+```
+
+### GET `/messages` (Route publique)
+
+Liste uniquement les messages actifs et dans leur période de validité.
+
+### GET `/dashboard/messages/{id}`
+
+Récupère un message par ID.
+
+### POST `/dashboard/messages`
+
+Crée un message important.
+
+**Body (JSON) :**
+
+```json
+{
+    "title": "Recherche de stage",
+    "message": "Je suis à la recherche d'un stage de 6 mois en développement web.",
+    "type": "urgent",
+    "icon": "briefcase",
+    "link_url": "mailto:contact@example.com",
+    "link_text": "Me contacter",
+    "is_active": true,
+    "order": 0,
+    "start_date": null,
+    "end_date": "2026-09-01"
+}
+```
+
+**Champs :**
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| title | string | ❌ | Titre du message (max 255) |
+| message | string | ✅ | Contenu du message (max 5000) |
+| type | string | ❌ | Type: `info`, `success`, `warning`, `urgent` |
+| icon | string | ❌ | Nom de l'icône (ex: briefcase, search) |
+| link_url | url | ❌ | URL du lien optionnel |
+| link_text | string | ❌ | Texte du lien |
+| is_active | boolean | ❌ | Actif ou non (défaut: true) |
+| order | integer | ❌ | Ordre d'affichage (défaut: 0) |
+| start_date | date | ❌ | Date de début d'affichage |
+| end_date | date | ❌ | Date de fin d'affichage |
+
+### PUT `/dashboard/messages/{id}`
+
+Met à jour un message (mêmes champs, tous optionnels sauf message).
+
+### PATCH `/dashboard/messages/{id}/toggle`
+
+Active ou désactive un message.
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "data": { ... },
+    "message": "Message activé"
+}
+```
+
+### DELETE `/dashboard/messages/{id}`
+
+Supprime un message.
+
+---
+
+## �🖼️ Images
 
 ### Images de Projets
 
@@ -784,3 +888,4 @@ const { data } = await api.delete('/dashboard/projects/1');
 | Competences | GET /dashboard/competences | GET /dashboard/competences/{id} | POST /dashboard/competences | PUT /dashboard/competences/{id} | DELETE /dashboard/competences/{id} |
 | Projects | GET /dashboard/projects | GET /dashboard/projects/{id} | POST /dashboard/projects | PUT /dashboard/projects/{id} | DELETE /dashboard/projects/{id} |
 | Realisations | GET /dashboard/realisations | GET /dashboard/realisations/{id} | POST /dashboard/realisations | PUT /dashboard/realisations/{id} | DELETE /dashboard/realisations/{id} |
+| Messages | GET /dashboard/messages | GET /dashboard/messages/{id} | POST /dashboard/messages | PUT /dashboard/messages/{id} | DELETE /dashboard/messages/{id} |

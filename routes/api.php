@@ -30,6 +30,9 @@ Route::get('/competences', [ApiController::class, 'competences']);
 // Route complète avec toutes les données
 Route::get('/all', [ApiController::class, 'all']);
 
+// Messages importants actifs (pour l'affichage public)
+Route::get('/messages', [DashboardApiController::class, 'listActiveMessages']);
+
 // ==========================================
 // ROUTES DASHBOARD (CRUD complet)
 // ==========================================
@@ -77,6 +80,14 @@ Route::prefix('dashboard')->group(function () {
     Route::post('/realisations', [DashboardApiController::class, 'createRealisation']);
     Route::put('/realisations/{id}', [DashboardApiController::class, 'updateRealisation']);
     Route::delete('/realisations/{id}', [DashboardApiController::class, 'deleteRealisation']);
+
+    // Important Messages
+    Route::get('/messages', [DashboardApiController::class, 'listMessages']);
+    Route::get('/messages/{id}', [DashboardApiController::class, 'getMessage']);
+    Route::post('/messages', [DashboardApiController::class, 'createMessage']);
+    Route::put('/messages/{id}', [DashboardApiController::class, 'updateMessage']);
+    Route::patch('/messages/{id}/toggle', [DashboardApiController::class, 'toggleMessage']);
+    Route::delete('/messages/{id}', [DashboardApiController::class, 'deleteMessage']);
 });
 
 // ==========================================

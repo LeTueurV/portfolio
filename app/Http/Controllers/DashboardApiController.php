@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\Models\Competence;
+use App\Models\ImportantMessage;
 use App\Models\Portfolio;
 use App\Models\Project;
 use App\Models\ProjectTag;
@@ -904,6 +905,8 @@ class DashboardApiController extends Controller
                 'projects_count' => Project::count(),
                 'realisations_count' => Realisation::count(),
                 'competences_count' => Competence::count(),
+                'messages_count' => ImportantMessage::count(),
+                'active_messages_count' => ImportantMessage::active()->count(),
                 'recent_projects' => Project::with('company')
                     ->orderBy('created_at', 'desc')
                     ->limit(5)
@@ -913,6 +916,178 @@ class DashboardApiController extends Controller
                     ->limit(5)
                     ->get(),
             ]
+        ]);
+    }
+
+    // ==========================================
+    // IMPORTANT MESSAGES
+    // ==========================================
+
+    /**
+     * Lister tous les messages importants
+     */
+    public function listMessages(): JsonResponse
+    {
+        $messages = ImportantMessage::orderBy('order')->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $messages
+        ]);
+    }
+
+    /**
+     * Lister uniquement les messages actifs (pour l'affichage public)
+     */
+    public function listActiveMessages(): JsonResponse
+    {
+        $messages = ImportantMessage::active()->orderBy('order')->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $messages
+        ]);
+    }
+
+    /**
+     * Récupérer un message par ID
+     */
+    public function getMessage(int $id): JsonResponse
+    {
+        $message = ImportantMessage::find($id);
+
+        if (!$message) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Message non trouvé'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $message
+        ]);
+    }
+
+    /**
+     * Créer un message important
+     */
+    public function createMessage(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'title' => 'nullable|string|max:255',
+            'message' => 'required|string|max:5000',
+            'type' => 'nullable|string|in:info,success,warning,urgent',
+            'icon' => 'nullable|string|max:100',
+            'link_url' => 'nullable|url|max:500',
+            'link_text' => 'nullable|string|max:100',
+            'is_active' => 'nullable|boolean',
+            'order' => 'nullable|integer|min:0',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $message = ImportantMessage::create($validator->validated());
+
+        return response()->json([
+            'success' => true,
+            'data' => $message,
+            'message' => 'Message créé avec succès'
+        ], 201);
+    }
+
+    /**
+     * Mettre à jour un message important
+     */
+    public function updateMessage(Request $request, int $id): JsonResponse
+    {
+        $message = ImportantMessage::find($id);
+
+        if (!$message) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Message non trouvé'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'title' => 'nullable|string|max:255',
+            'message' => 'sometimes|string|max:5000',
+            'type' => 'nullable|string|in:info,success,warning,urgent',
+            'icon' => 'nullable|string|max:100',
+            'link_url' => 'nullable|url|max:500',
+            'link_text' => 'nullable|string|max:100',
+            'is_active' => 'nullable|boolean',
+            'order' => 'nullable|integer|min:0',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $message->update($validator->validated());
+
+        return response()->json([
+            'success' => true,
+            'data' => $message,
+            'message' => 'Message mis à jour avec succès'
+        ]);
+    }
+
+    /**
+     * Activer/Désactiver un message
+     */
+    public function toggleMessage(int $id): JsonResponse
+    {
+        $message = ImportantMessage::find($id);
+
+        if (!$message) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Message non trouvé'
+            ], 404);
+        }
+
+        $message->update(['is_active' => !$message->is_active]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $message,
+            'message' => $message->is_active ? 'Message activé' : 'Message désactivé'
+        ]);
+    }
+
+    /**
+     * Supprimer un message important
+     */
+    public function deleteMessage(int $id): JsonResponse
+    {
+        $message = ImportantMessage::find($id);
+
+        if (!$message) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Message non trouvé'
+            ], 404);
+        }
+
+        $message->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Message supprimé avec succès'
         ]);
     }
 }
