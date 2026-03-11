@@ -1,0 +1,786 @@
+# Documentation API Portfolio - Context.MD
+
+## Base URL
+
+```
+http://localhost:8000/api
+```
+
+---
+
+## Structure de réponse standard
+
+Toutes les réponses suivent la même structure :
+
+### Succès
+
+```json
+{
+    "success": true,
+    "data": { ... },
+    "message": "Message optionnel"
+}
+```
+
+### Erreur
+
+```json
+{
+    "success": false,
+    "error": "Description de l'erreur"
+}
+```
+
+### Erreur de validation
+
+```json
+{
+    "success": false,
+    "errors": {
+        "field_name": ["Message d'erreur"]
+    }
+}
+```
+
+---
+
+## Routes Publiques (Lecture seule)
+
+Ces routes sont destinées à l'affichage public du portfolio.
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/ping` | Vérifier si le serveur est actif |
+| GET | `/portfolio` | Informations du portfolio |
+| GET | `/stages` | Liste des stages |
+| GET | `/projects` | Liste des projets |
+| GET | `/projects/{id}` | Détail d'un projet |
+| GET | `/realisations` | Liste des réalisations |
+| GET | `/realisations/{id}` | Détail d'une réalisation |
+| GET | `/companies` | Liste des entreprises |
+| GET | `/competences` | Liste des compétences |
+| GET | `/all` | Toutes les données en une requête |
+
+---
+
+## Routes Dashboard (CRUD complet)
+
+Toutes les routes dashboard sont préfixées par `/dashboard`.
+
+---
+
+## 📊 Stats
+
+### GET `/dashboard/stats`
+
+Récupère les statistiques globales du dashboard.
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "data": {
+        "companies_count": 5,
+        "stages_count": 3,
+        "projects_count": 12,
+        "realisations_count": 8,
+        "competences_count": 15,
+        "recent_projects": [...],
+        "recent_realisations": [...]
+    }
+}
+```
+
+---
+
+## 👤 Portfolio
+
+### GET `/dashboard/portfolio`
+
+Récupère les informations du portfolio.
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "first_name": "John",
+        "last_name": "Doe",
+        "bio": "Développeur Full Stack",
+        "photo_url": "/storage/photos/profile.jpg",
+        "email": "john@example.com",
+        "phone": "+33 6 12 34 56 78",
+        "location": "Paris, France",
+        "linkedin_url": "https://linkedin.com/in/johndoe",
+        "github_url": "https://github.com/johndoe",
+        "year_start": 2020,
+        "year_end": 2025,
+        "contact_message": "N'hésitez pas à me contacter !",
+        "created_at": "2025-03-04T10:00:00.000000Z",
+        "updated_at": "2025-03-04T10:00:00.000000Z"
+    }
+}
+```
+
+### PUT `/dashboard/portfolio`
+
+Met à jour les informations du portfolio.
+
+**Body (JSON) :**
+
+```json
+{
+    "first_name": "John",
+    "last_name": "Doe",
+    "bio": "Développeur Full Stack passionné",
+    "photo_url": "/storage/photos/profile.jpg",
+    "email": "john@example.com",
+    "phone": "+33 6 12 34 56 78",
+    "location": "Paris, France",
+    "linkedin_url": "https://linkedin.com/in/johndoe",
+    "github_url": "https://github.com/johndoe",
+    "year_start": 2020,
+    "year_end": 2025,
+    "contact_message": "N'hésitez pas à me contacter !"
+}
+```
+
+**Champs (tous optionnels pour la mise à jour) :**
+
+| Champ | Type | Max | Description |
+|-------|------|-----|-------------|
+| first_name | string | 255 | Prénom |
+| last_name | string | 255 | Nom |
+| bio | string | 5000 | Biographie |
+| photo_url | string | 500 | URL de la photo |
+| email | email | 255 | Email |
+| phone | string | 50 | Téléphone |
+| location | string | 255 | Localisation |
+| linkedin_url | url | 500 | URL LinkedIn |
+| github_url | url | 500 | URL GitHub |
+| year_start | integer | - | Année de début |
+| year_end | integer | - | Année de fin |
+| contact_message | string | 2000 | Message de contact |
+
+---
+
+## 🏢 Companies (Entreprises)
+
+### GET `/dashboard/companies`
+
+Liste toutes les entreprises avec compteurs.
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "name": "Entreprise ABC",
+            "sector": "Tech",
+            "description": "Description de l'entreprise",
+            "location": "Paris",
+            "photo_url": "/storage/companies/abc.jpg",
+            "stages_count": 2,
+            "projects_count": 5,
+            "realisations_count": 3,
+            "created_at": "2025-03-04T10:00:00.000000Z",
+            "updated_at": "2025-03-04T10:00:00.000000Z"
+        }
+    ]
+}
+```
+
+### GET `/dashboard/companies/{id}`
+
+Récupère une entreprise avec ses relations.
+
+### POST `/dashboard/companies`
+
+Crée une entreprise.
+
+**Body (JSON) :**
+
+```json
+{
+    "name": "Nouvelle Entreprise",
+    "sector": "Digital",
+    "description": "Description de l'entreprise",
+    "location": "Lyon, France",
+    "photo_url": "/storage/companies/logo.jpg"
+}
+```
+
+**Champs :**
+
+| Champ | Type | Requis | Max | Description |
+|-------|------|--------|-----|-------------|
+| name | string | ✅ | 255 | Nom de l'entreprise |
+| sector | string | ❌ | 255 | Secteur d'activité |
+| description | string | ❌ | 5000 | Description |
+| location | string | ❌ | 255 | Localisation |
+| photo_url | string | ❌ | 500 | URL du logo |
+
+### PUT `/dashboard/companies/{id}`
+
+Met à jour une entreprise (mêmes champs, tous optionnels).
+
+### DELETE `/dashboard/companies/{id}`
+
+Supprime une entreprise.
+
+⚠️ **Note :** La suppression échoue si l'entreprise a des stages, projets ou réalisations associés.
+
+---
+
+## 📅 Stages
+
+### GET `/dashboard/stages`
+
+Liste tous les stages avec entreprise et compétences.
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "company_id": 1,
+            "start_date": "2024-01-15",
+            "end_date": "2024-06-15",
+            "duration": "6 mois",
+            "role": "Développeur Full Stack",
+            "description": "Description du stage",
+            "company": {
+                "id": 1,
+                "name": "Entreprise ABC"
+            },
+            "competences": [
+                {
+                    "id": 1,
+                    "code": "C1",
+                    "label": "Développement Web"
+                }
+            ],
+            "created_at": "2025-03-04T10:00:00.000000Z",
+            "updated_at": "2025-03-04T10:00:00.000000Z"
+        }
+    ]
+}
+```
+
+### GET `/dashboard/stages/{id}`
+
+Récupère un stage par ID.
+
+### POST `/dashboard/stages`
+
+Crée un stage.
+
+**Body (JSON) :**
+
+```json
+{
+    "company_id": 1,
+    "start_date": "2024-01-15",
+    "end_date": "2024-06-15",
+    "duration": "6 mois",
+    "role": "Développeur Full Stack",
+    "description": "Description détaillée du stage",
+    "competence_ids": [1, 2, 3]
+}
+```
+
+**Champs :**
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| company_id | integer | ✅ | ID de l'entreprise |
+| start_date | date | ✅ | Date de début (YYYY-MM-DD) |
+| end_date | date | ✅ | Date de fin (YYYY-MM-DD) |
+| duration | string | ❌ | Durée textuelle |
+| role | string | ✅ | Rôle/poste |
+| description | string | ❌ | Description |
+| competence_ids | array | ❌ | IDs des compétences |
+
+### PUT `/dashboard/stages/{id}`
+
+Met à jour un stage (mêmes champs, tous optionnels).
+
+### DELETE `/dashboard/stages/{id}`
+
+Supprime un stage.
+
+---
+
+## 🎯 Competences
+
+### GET `/dashboard/competences`
+
+Liste toutes les compétences avec compteurs.
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "code": "C1",
+            "label": "Développer une application sécurisée",
+            "bloc": "Bloc 1",
+            "description": "Description de la compétence",
+            "projects_count": 5,
+            "stages_count": 2,
+            "created_at": "2025-03-04T10:00:00.000000Z",
+            "updated_at": "2025-03-04T10:00:00.000000Z"
+        }
+    ]
+}
+```
+
+### GET `/dashboard/competences/{id}`
+
+Récupère une compétence avec ses projets et stages.
+
+### POST `/dashboard/competences`
+
+Crée une compétence.
+
+**Body (JSON) :**
+
+```json
+{
+    "code": "C1.1",
+    "label": "Nouvelle compétence",
+    "bloc": "Bloc 1",
+    "description": "Description de la compétence"
+}
+```
+
+**Champs :**
+
+| Champ | Type | Requis | Max | Description |
+|-------|------|--------|-----|-------------|
+| code | string | ✅ | 50 | Code unique |
+| label | string | ✅ | 255 | Libellé |
+| bloc | string | ❌ | 100 | Bloc de compétences |
+| description | string | ❌ | 5000 | Description |
+
+### PUT `/dashboard/competences/{id}`
+
+Met à jour une compétence.
+
+### DELETE `/dashboard/competences/{id}`
+
+Supprime une compétence.
+
+---
+
+## 💼 Projects
+
+### GET `/dashboard/projects`
+
+Liste tous les projets avec relations.
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "company_id": 1,
+            "title": "Application Web E-commerce",
+            "type": "Web",
+            "description": "Courte description",
+            "long_description": "Description détaillée en markdown...",
+            "year": 2024,
+            "company": {
+                "id": 1,
+                "name": "Entreprise ABC"
+            },
+            "tags": [
+                {"id": 1, "project_id": 1, "tag": "Laravel"},
+                {"id": 2, "project_id": 1, "tag": "Vue.js"}
+            ],
+            "competences": [
+                {"id": 1, "code": "C1", "label": "Développement Web"}
+            ],
+            "images": [
+                {
+                    "id": 1,
+                    "project_id": 1,
+                    "image_url": "/storage/projects/image1.jpg",
+                    "caption": "Page d'accueil",
+                    "description": "Description de l'image",
+                    "order": 1
+                }
+            ],
+            "created_at": "2025-03-04T10:00:00.000000Z",
+            "updated_at": "2025-03-04T10:00:00.000000Z"
+        }
+    ]
+}
+```
+
+### GET `/dashboard/projects/{id}`
+
+Récupère un projet par ID.
+
+### POST `/dashboard/projects`
+
+Crée un projet.
+
+**Body (JSON) :**
+
+```json
+{
+    "company_id": 1,
+    "title": "Nouveau Projet",
+    "type": "Web",
+    "description": "Courte description du projet",
+    "long_description": "# Description détaillée\n\nContenu en markdown...",
+    "year": 2024,
+    "tags": ["Laravel", "Vue.js", "TailwindCSS"],
+    "competence_ids": [1, 2, 3]
+}
+```
+
+**Champs :**
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| company_id | integer | ❌ | ID de l'entreprise |
+| title | string | ✅ | Titre du projet |
+| type | string | ❌ | Type de projet |
+| description | string | ❌ | Description courte |
+| long_description | string | ❌ | Description longue (markdown) |
+| year | integer | ❌ | Année |
+| tags | array | ❌ | Tableau de tags (strings) |
+| competence_ids | array | ❌ | IDs des compétences |
+
+### PUT `/dashboard/projects/{id}`
+
+Met à jour un projet.
+
+**Exemple :**
+
+```json
+{
+    "title": "Titre modifié",
+    "description": "Nouvelle description",
+    "tags": ["PHP", "MySQL"],
+    "competence_ids": [1, 4]
+}
+```
+
+### DELETE `/dashboard/projects/{id}`
+
+Supprime un projet (et ses tags, images, relations).
+
+---
+
+## 🎨 Realisations
+
+### GET `/dashboard/realisations`
+
+Liste toutes les réalisations.
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "type": "Design",
+            "company_id": 1,
+            "title": "Refonte du site web",
+            "description": "Courte description",
+            "long_description": "Description détaillée...",
+            "company": {
+                "id": 1,
+                "name": "Entreprise ABC"
+            },
+            "tags": [
+                {"id": 1, "realisation_id": 1, "tag": "Figma"}
+            ],
+            "images": [...],
+            "created_at": "2025-03-04T10:00:00.000000Z",
+            "updated_at": "2025-03-04T10:00:00.000000Z"
+        }
+    ]
+}
+```
+
+### GET `/dashboard/realisations/{id}`
+
+Récupère une réalisation par ID.
+
+### POST `/dashboard/realisations`
+
+Crée une réalisation.
+
+**Body (JSON) :**
+
+```json
+{
+    "type": "Design",
+    "company_id": 1,
+    "title": "Nouvelle réalisation",
+    "description": "Courte description",
+    "long_description": "Description détaillée en markdown",
+    "tags": ["Figma", "Adobe XD", "UI/UX"]
+}
+```
+
+**Champs :**
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| type | string | ❌ | Type de réalisation |
+| company_id | integer | ❌ | ID de l'entreprise |
+| title | string | ✅ | Titre |
+| description | string | ❌ | Description courte |
+| long_description | string | ❌ | Description longue (markdown) |
+| tags | array | ❌ | Tableau de tags (strings) |
+
+### PUT `/dashboard/realisations/{id}`
+
+Met à jour une réalisation.
+
+### DELETE `/dashboard/realisations/{id}`
+
+Supprime une réalisation.
+
+---
+
+## 🖼️ Images
+
+### Images de Projets
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/images/projects/{projectId}` | Liste les images d'un projet |
+| POST | `/images/projects/{projectId}` | Upload une image |
+| DELETE | `/images/projects/image/{imageId}` | Supprime une image |
+| PUT | `/images/projects/{projectId}/order` | Met à jour l'ordre |
+
+### Upload d'image
+
+**Body (multipart/form-data) :**
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| image | file | ✅ | Fichier image (jpeg, png, jpg, gif, webp) max 5MB |
+| caption | string | ❌ | Légende |
+| description | string | ❌ | Description |
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "image": {
+        "id": 1,
+        "project_id": 1,
+        "image_url": "/storage/projects/project_1_abc123.jpg",
+        "caption": "Page d'accueil",
+        "description": "Description de l'image",
+        "order": 1,
+        "created_at": "2025-03-04T10:00:00.000000Z",
+        "updated_at": "2025-03-04T10:00:00.000000Z"
+    }
+}
+```
+
+### Mise à jour de l'ordre
+
+**Body (JSON) :**
+
+```json
+{
+    "images": [
+        {"id": 1, "order": 2},
+        {"id": 2, "order": 1},
+        {"id": 3, "order": 3}
+    ]
+}
+```
+
+### Images de Réalisations
+
+Mêmes routes que pour les projets, avec `/realisations` au lieu de `/projects`.
+
+---
+
+## 🔗 Exemples d'appels avec Fetch (JavaScript)
+
+### GET - Récupérer des données
+
+```javascript
+// Liste des projets
+const response = await fetch('http://localhost:8000/api/dashboard/projects');
+const data = await response.json();
+
+if (data.success) {
+    console.log(data.data); // Tableau des projets
+}
+```
+
+### POST - Créer une ressource
+
+```javascript
+const response = await fetch('http://localhost:8000/api/dashboard/projects', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    },
+    body: JSON.stringify({
+        title: 'Mon nouveau projet',
+        description: 'Description du projet',
+        year: 2024,
+        tags: ['Laravel', 'Vue.js'],
+        competence_ids: [1, 2]
+    })
+});
+
+const data = await response.json();
+
+if (data.success) {
+    console.log('Projet créé:', data.data);
+} else {
+    console.error('Erreurs:', data.errors);
+}
+```
+
+### PUT - Mettre à jour une ressource
+
+```javascript
+const response = await fetch('http://localhost:8000/api/dashboard/projects/1', {
+    method: 'PUT',
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    },
+    body: JSON.stringify({
+        title: 'Titre modifié',
+        tags: ['PHP', 'MySQL']
+    })
+});
+
+const data = await response.json();
+```
+
+### DELETE - Supprimer une ressource
+
+```javascript
+const response = await fetch('http://localhost:8000/api/dashboard/projects/1', {
+    method: 'DELETE',
+    headers: {
+        'Accept': 'application/json',
+    }
+});
+
+const data = await response.json();
+
+if (data.success) {
+    console.log(data.message);
+}
+```
+
+### Upload d'image (multipart/form-data)
+
+```javascript
+const formData = new FormData();
+formData.append('image', fileInput.files[0]);
+formData.append('caption', 'Ma légende');
+formData.append('description', 'Description de l\'image');
+
+const response = await fetch('http://localhost:8000/api/images/projects/1', {
+    method: 'POST',
+    body: formData
+});
+
+const data = await response.json();
+```
+
+---
+
+## 🔗 Exemples avec Axios
+
+### Configuration de base
+
+```javascript
+import axios from 'axios';
+
+const api = axios.create({
+    baseURL: 'http://localhost:8000/api',
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+});
+```
+
+### CRUD Examples
+
+```javascript
+// GET - Liste
+const { data } = await api.get('/dashboard/projects');
+
+// GET - Détail
+const { data } = await api.get('/dashboard/projects/1');
+
+// POST - Créer
+const { data } = await api.post('/dashboard/projects', {
+    title: 'Nouveau projet',
+    tags: ['Laravel']
+});
+
+// PUT - Mettre à jour
+const { data } = await api.put('/dashboard/projects/1', {
+    title: 'Titre modifié'
+});
+
+// DELETE - Supprimer
+const { data } = await api.delete('/dashboard/projects/1');
+```
+
+---
+
+## Codes HTTP de retour
+
+| Code | Description |
+|------|-------------|
+| 200 | Succès |
+| 201 | Ressource créée |
+| 404 | Ressource non trouvée |
+| 409 | Conflit (ex: suppression impossible) |
+| 422 | Erreur de validation |
+| 500 | Erreur serveur |
+
+---
+
+## Résumé des routes Dashboard
+
+| Ressource | List | Get | Create | Update | Delete |
+|-----------|------|-----|--------|--------|--------|
+| Portfolio | GET /dashboard/portfolio | - | - | PUT /dashboard/portfolio | - |
+| Companies | GET /dashboard/companies | GET /dashboard/companies/{id} | POST /dashboard/companies | PUT /dashboard/companies/{id} | DELETE /dashboard/companies/{id} |
+| Stages | GET /dashboard/stages | GET /dashboard/stages/{id} | POST /dashboard/stages | PUT /dashboard/stages/{id} | DELETE /dashboard/stages/{id} |
+| Competences | GET /dashboard/competences | GET /dashboard/competences/{id} | POST /dashboard/competences | PUT /dashboard/competences/{id} | DELETE /dashboard/competences/{id} |
+| Projects | GET /dashboard/projects | GET /dashboard/projects/{id} | POST /dashboard/projects | PUT /dashboard/projects/{id} | DELETE /dashboard/projects/{id} |
+| Realisations | GET /dashboard/realisations | GET /dashboard/realisations/{id} | POST /dashboard/realisations | PUT /dashboard/realisations/{id} | DELETE /dashboard/realisations/{id} |
