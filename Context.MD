@@ -774,46 +774,192 @@ Supprime un message.
 
 ---
 
-## �🖼️ Images
+## 🖼️ Images & Uploads
 
-### Images de Projets
+Toutes les routes d'upload sont préfixées par `/images`. Les fichiers sont stockés dans `/storage/{dossier}/` et l'URL retournée est directement utilisable pour l'affichage.
 
-| Méthode | Route | Description |
-|---------|-------|-------------|
-| GET | `/images/projects/{projectId}` | Liste les images d'un projet |
-| POST | `/images/projects/{projectId}` | Upload une image |
-| DELETE | `/images/projects/image/{imageId}` | Supprime une image |
-| PUT | `/images/projects/{projectId}/order` | Met à jour l'ordre |
+### Structure des dossiers
 
-### Upload d'image
+| Dossier | Contenu |
+|---------|---------|
+| `/storage/portfolio/` | Photo de profil |
+| `/storage/companies/` | Logos des entreprises |
+| `/storage/formations/` | Logos des écoles |
+| `/storage/diplomas/` | Fichiers diplômes (PDF/images) |
+| `/storage/projects/` | Images des projets |
+| `/storage/realisations/` | Images des réalisations |
+
+---
+
+### 👤 Portfolio - Photo de profil
+
+#### POST `/images/portfolio`
+
+Upload la photo de profil du portfolio.
 
 **Body (multipart/form-data) :**
 
 | Champ | Type | Requis | Description |
 |-------|------|--------|-------------|
-| image | file | ✅ | Fichier image (jpeg, png, jpg, gif, webp) max 5MB |
-| caption | string | ❌ | Légende |
-| description | string | ❌ | Description |
+| image | file | ✅ | Image (jpeg, png, jpg, gif, webp) max 5MB |
 
 **Exemple de retour :**
 
 ```json
 {
     "success": true,
-    "image": {
+    "url": "/storage/portfolio/photo_20250311_143052_abc12345.jpg",
+    "portfolio": {
         "id": 1,
-        "project_id": 1,
-        "image_url": "/storage/projects/project_1_abc123.jpg",
-        "caption": "Page d'accueil",
-        "description": "Description de l'image",
-        "order": 1,
-        "created_at": "2025-03-04T10:00:00.000000Z",
-        "updated_at": "2025-03-04T10:00:00.000000Z"
+        "first_name": "John",
+        "photo_url": "/storage/portfolio/photo_20250311_143052_abc12345.jpg",
+        ...
     }
 }
 ```
 
-### Mise à jour de l'ordre
+#### DELETE `/images/portfolio`
+
+Supprime la photo de profil.
+
+---
+
+### 🏢 Companies - Logo
+
+#### POST `/images/companies/{companyId}`
+
+Upload le logo d'une entreprise.
+
+**Body (multipart/form-data) :**
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| image | file | ✅ | Image (jpeg, png, jpg, gif, webp, svg) max 5MB |
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "url": "/storage/companies/company_1_20250311_143052_abc12345.png",
+    "company": {
+        "id": 1,
+        "name": "Entreprise ABC",
+        "photo_url": "/storage/companies/company_1_20250311_143052_abc12345.png",
+        ...
+    }
+}
+```
+
+#### DELETE `/images/companies/{companyId}`
+
+Supprime le logo de l'entreprise.
+
+---
+
+### 🎓 Formations - Logo & Diplôme
+
+#### POST `/images/formations/{formationId}/logo`
+
+Upload le logo de l'école/établissement.
+
+**Body (multipart/form-data) :**
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| image | file | ✅ | Image (jpeg, png, jpg, gif, webp, svg) max 5MB |
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "url": "/storage/formations/formation_1_logo_20250311_143052_abc12345.png",
+    "formation": {
+        "id": 1,
+        "title": "BTS SIO SLAM",
+        "logo_url": "/storage/formations/formation_1_logo_20250311_143052_abc12345.png",
+        ...
+    }
+}
+```
+
+#### DELETE `/images/formations/{formationId}/logo`
+
+Supprime le logo de la formation.
+
+#### POST `/images/formations/{formationId}/diploma`
+
+Upload le diplôme (PDF ou image).
+
+**Body (multipart/form-data) :**
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| file | file | ✅ | PDF ou image (pdf, jpeg, png, jpg) max 10MB |
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "url": "/storage/diplomas/diploma_1_20250311_143052_abc12345.pdf",
+    "formation": {
+        "id": 1,
+        "title": "BTS SIO SLAM",
+        "diploma_url": "/storage/diplomas/diploma_1_20250311_143052_abc12345.pdf",
+        ...
+    }
+}
+```
+
+#### DELETE `/images/formations/{formationId}/diploma`
+
+Supprime le diplôme.
+
+---
+
+### 💼 Projects - Galerie d'images
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/images/projects/{projectId}` | Liste les images du projet |
+| POST | `/images/projects/{projectId}` | Upload une image |
+| DELETE | `/images/projects/image/{imageId}` | Supprime une image |
+| PUT | `/images/projects/{projectId}/order` | Met à jour l'ordre |
+
+#### POST `/images/projects/{projectId}`
+
+**Body (multipart/form-data) :**
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| image | file | ✅ | Image (jpeg, png, jpg, gif, webp) max 5MB |
+| caption | string | ❌ | Légende de l'image |
+| description | string | ❌ | Description détaillée |
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "url": "/storage/projects/project_1_20250311_143052_abc12345.jpg",
+    "image": {
+        "id": 1,
+        "project_id": 1,
+        "image_url": "/storage/projects/project_1_20250311_143052_abc12345.jpg",
+        "caption": "Page d'accueil",
+        "description": "Description de l'image",
+        "order": 1,
+        "created_at": "2025-03-11T14:30:52.000000Z",
+        "updated_at": "2025-03-11T14:30:52.000000Z"
+    }
+}
+```
+
+#### PUT `/images/projects/{projectId}/order`
+
+Met à jour l'ordre des images.
 
 **Body (JSON) :**
 
@@ -827,9 +973,125 @@ Supprime un message.
 }
 ```
 
-### Images de Réalisations
+---
+
+### 🎨 Realisations - Galerie d'images
 
 Mêmes routes que pour les projets, avec `/realisations` au lieu de `/projects`.
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/images/realisations/{realisationId}` | Liste les images |
+| POST | `/images/realisations/{realisationId}` | Upload une image |
+| DELETE | `/images/realisations/image/{imageId}` | Supprime une image |
+| PUT | `/images/realisations/{realisationId}/order` | Met à jour l'ordre |
+
+---
+
+## 📤 Exemples d'upload avec JavaScript
+
+### Upload simple (photo de profil)
+
+```javascript
+const fileInput = document.getElementById('photoInput');
+const formData = new FormData();
+formData.append('image', fileInput.files[0]);
+
+const response = await fetch('http://localhost:8000/api/images/portfolio', {
+    method: 'POST',
+    body: formData
+});
+
+const data = await response.json();
+
+if (data.success) {
+    console.log('Photo uploadée:', data.url);
+    // Utiliser data.url pour afficher l'image
+    document.getElementById('preview').src = data.url;
+}
+```
+
+### Upload logo entreprise
+
+```javascript
+const companyId = 1;
+const formData = new FormData();
+formData.append('image', fileInput.files[0]);
+
+const response = await fetch(`http://localhost:8000/api/images/companies/${companyId}`, {
+    method: 'POST',
+    body: formData
+});
+
+const data = await response.json();
+if (data.success) {
+    console.log('Logo uploadé:', data.url);
+}
+```
+
+### Upload image projet avec légende
+
+```javascript
+const projectId = 1;
+const formData = new FormData();
+formData.append('image', fileInput.files[0]);
+formData.append('caption', 'Page d\'accueil du site');
+formData.append('description', 'Capture d\'écran de la page d\'accueil avec le nouveau design');
+
+const response = await fetch(`http://localhost:8000/api/images/projects/${projectId}`, {
+    method: 'POST',
+    body: formData
+});
+
+const data = await response.json();
+if (data.success) {
+    console.log('Image ajoutée:', data.image);
+}
+```
+
+### Upload diplôme PDF
+
+```javascript
+const formationId = 1;
+const formData = new FormData();
+formData.append('file', pdfInput.files[0]); // Note: 'file' pas 'image'
+
+const response = await fetch(`http://localhost:8000/api/images/formations/${formationId}/diploma`, {
+    method: 'POST',
+    body: formData
+});
+
+const data = await response.json();
+if (data.success) {
+    console.log('Diplôme uploadé:', data.url);
+}
+```
+
+### Supprimer une image
+
+```javascript
+// Supprimer la photo de profil
+await fetch('http://localhost:8000/api/images/portfolio', { method: 'DELETE' });
+
+// Supprimer le logo d'une entreprise
+await fetch('http://localhost:8000/api/images/companies/1', { method: 'DELETE' });
+
+// Supprimer une image de projet
+await fetch('http://localhost:8000/api/images/projects/image/5', { method: 'DELETE' });
+```
+
+---
+
+## Résumé des routes Images
+
+| Entité | Upload | Delete | Notes |
+|--------|--------|--------|-------|
+| Portfolio | POST `/images/portfolio` | DELETE `/images/portfolio` | Photo de profil unique |
+| Company | POST `/images/companies/{id}` | DELETE `/images/companies/{id}` | Logo unique |
+| Formation Logo | POST `/images/formations/{id}/logo` | DELETE `/images/formations/{id}/logo` | Logo unique |
+| Formation Diplôme | POST `/images/formations/{id}/diploma` | DELETE `/images/formations/{id}/diploma` | PDF ou image |
+| Project | POST `/images/projects/{id}` | DELETE `/images/projects/image/{imageId}` | Galerie multi-images |
+| Realisation | POST `/images/realisations/{id}` | DELETE `/images/realisations/image/{imageId}` | Galerie multi-images |
 
 ---
 
