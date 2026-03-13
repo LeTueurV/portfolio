@@ -80,9 +80,10 @@ COPY --from=node_builder /app/public/build ./public/build
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 ############################################
-# Create storage directories for images
+# Create storage directories (cache, logs, etc.)
+# Note: Images are now stored on Cloudflare R2
 ############################################
-RUN mkdir -p storage/app/public/projects storage/app/public/realisations
+RUN mkdir -p storage/app/private storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
 
 ############################################
 # Permissions
@@ -90,9 +91,9 @@ RUN mkdir -p storage/app/public/projects storage/app/public/realisations
 RUN chmod -R 775 storage bootstrap/cache
 
 ############################################
-# Create storage symlink
+# Clear default storage symlink if needed
 ############################################
-RUN php artisan storage:link
+RUN rm -f public/storage || true
 
 ############################################
 # Render dynamic port

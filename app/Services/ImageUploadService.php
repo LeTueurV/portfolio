@@ -81,12 +81,15 @@ class ImageUploadService
         $filename = $this->generateFilename($prefix, $extension);
 
         try {
-            // Stocker le fichier
-            $path = $file->storeAs($folder, $filename, 'public');
+            // Stocker le fichier sur Cloudflare R2
+            $path = $file->storeAs($folder, $filename, 'r2');
+            
+            // Récupérer l'URL publique du fichier
+            $url = Storage::disk('r2')->url($path);
 
             return [
                 'success' => true,
-                'url' => '/storage/' . $path,
+                'url' => $url,
                 'filename' => $filename,
                 'path' => $path,
                 'error' => null
@@ -103,17 +106,37 @@ class ImageUploadService
     /**
      * Supprime une image
      *
-     * @param string $url URL de l'image (/storage/...)
+     * @param string $url URL de l'image (URL complète depuis Cloudflare R2)
      * @return array ['success' => bool, 'error' => string|null]
      */
     public function delete(string $url): array
     {
         try {
-            // Extraire le chemin relatif
-            $path = str_replace('/storage/', '', $url);
+            // Extraire le chemin du fichier depuis l'URL R2
+            // L'URL est au format: https://[bucket-id].r2.cloudflarestorage.com/[path]
+            $publicUrl = env('CLOUDFLARE_R2_PUBLIC_URL', '');
+            
+            if (empty($publicUrl)) {
+                return [
+                    'success' => false,
+                    'error' => 'URL publique R2 non configurée'
+                ];
+            }
+
+            // Extraire le chemin relatif de l'URL
+            if (strpos($url, $publicUrl) === 0) {
+                $path = str_replace($publicUrl, '', $url);
+                $path = ltrim($path, '/');
+            } else {
+                // Si l'URL ne correspond pas, on ne peut pas supprimer
+                return [
+                    'success' => false,
+                    'error' => 'URL invalide ou non reconnu'
+                ];
+            }
 
             // Vérifier que le fichier existe
-            if (!Storage::disk('public')->exists($path)) {
+            if (!Storage::disk('r2')->exists($path)) {
                 return [
                     'success' => false,
                     'error' => 'Fichier non trouvé'
@@ -121,7 +144,7 @@ class ImageUploadService
             }
 
             // Supprimer le fichier
-            Storage::disk('public')->delete($path);
+            Storage::disk('r2')->delete($path);
 
             return [
                 'success' => true,
@@ -189,10 +212,14 @@ class ImageUploadService
             return [];
         }
 
-        $files = Storage::disk('public')->files($folder);
-        
-        return array_map(function ($file) {
-            return '/storage/' . $file;
-        }, $files);
+        try {
+            $files = Storage::disk('r2')->files($folder);
+            
+            return array_map(function ($file) {
+                return Storage::disk('r2')->url($file);
+            }, $files);
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 }

@@ -1,5 +1,33 @@
 # Documentation API Portfolio - Context.MD
 
+## 📋 Changements récents (Mars 2025)
+
+### Migration vers Cloudflare R2 pour le stockage d'images
+
+Depuis **Mars 2025**, toutes les images sont stockées sur **Cloudflare R2** au lieu du serveur local. Les URLs retournées sont maintenant au format :
+
+```
+https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/{dossier}/{fichier}
+```
+
+**Configuration requise dans `.env` :**
+
+```env
+CLOUDFLARE_R2_ACCESS_KEY_ID=d912100a938a4ab3571d165ba99b2dd6
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=01f5f394a3f922c89258cc69452946b034d86958c64a5445f4a901bc640cdd9a
+CLOUDFLARE_R2_BUCKET=a55c6e5cc8c8a996e287abce953ac92c
+CLOUDFLARE_R2_ENDPOINT=https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com
+CLOUDFLARE_R2_PUBLIC_URL=https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com
+```
+
+**Impact :** 
+- Les uploads d'images via les routes `/images/*` vont maintenant être stockés sur R2
+- Les URLs retournées changeront de `/storage/...` à `https://[bucket].r2.cloudflarestorage.com/...`
+- Plus besoin d'espace disque local pour les images
+- Stockage durable et sécurisé via Cloudflare
+
+---
+
 ## Base URL
 
 ```
@@ -115,7 +143,7 @@ Récupère les informations du portfolio.
         "first_name": "John",
         "last_name": "Doe",
         "bio": "Développeur Full Stack",
-        "photo_url": "/storage/photos/profile.jpg",
+        "photo_url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/portfolio/photo_20250311_143052_abc12345.jpg",
         "email": "john@example.com",
         "phone": "+33 6 12 34 56 78",
         "location": "Paris, France",
@@ -190,7 +218,7 @@ Liste toutes les entreprises avec compteurs.
             "sector": "Tech",
             "description": "Description de l'entreprise",
             "location": "Paris",
-            "photo_url": "/storage/companies/abc.jpg",
+            "photo_url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/companies/company_1_20250311_143052_abc12345.png",
             "stages_count": 2,
             "projects_count": 5,
             "realisations_count": 3,
@@ -217,7 +245,7 @@ Crée une entreprise.
     "sector": "Digital",
     "description": "Description de l'entreprise",
     "location": "Lyon, France",
-    "photo_url": "/storage/companies/logo.jpg"
+    "photo_url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/companies/company_logo_20250311_143052_abc12345.png"
 }
 ```
 
@@ -347,7 +375,7 @@ Liste toutes les formations (parcours scolaire, diplômes).
             "end_date": "2025-06-30",
             "is_current": false,
             "description": "Formation en développement d'applications...",
-            "logo_url": "/storage/formations/lycee.jpg",
+            "logo_url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/formations/formation_1_logo_20250311_143052_abc12345.png",
             "diploma_url": null,
             "order": 0,
             "period": "2023 — 2025",
@@ -395,7 +423,7 @@ Crée une formation.
     "end_date": "2025-06-30",
     "is_current": false,
     "description": "Formation en développement d'applications",
-    "logo_url": "/storage/formations/logo.jpg",
+    "logo_url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/formations/formation_logo_20250311_143052_abc12345.png",
     "diploma_url": null,
     "order": 0
 }
@@ -527,7 +555,7 @@ Liste tous les projets avec relations.
                 {
                     "id": 1,
                     "project_id": 1,
-                    "image_url": "/storage/projects/image1.jpg",
+                    "image_url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/projects/project_1_20250311_143052_abc12345.jpg",
                     "caption": "Page d'accueil",
                     "description": "Description de l'image",
                     "order": 1
@@ -776,18 +804,33 @@ Supprime un message.
 
 ## 🖼️ Images & Uploads
 
-Toutes les routes d'upload sont préfixées par `/images`. Les fichiers sont stockés dans `/storage/{dossier}/` et l'URL retournée est directement utilisable pour l'affichage.
+⚠️ **CHANGEMENT IMPORTANT (Mars 2025)** : Les images sont maintenant stockées sur **Cloudflare R2** et non sur le serveur local.
 
-### Structure des dossiers
+Toutes les routes d'upload sont préfixées par `/images`. Les fichiers sont maintenant hébergés sur Cloudflare R2 et l'URL retournée au format `https://[bucket-id].r2.cloudflarestorage.com/[dossier]/[fichier]` est directement utilisable pour l'affichage.
+
+### Configuration Cloudflare R2
+
+**Variables d'environnement requises :**
+
+```env
+CLOUDFLARE_R2_ACCESS_KEY_ID=d912100a938a4ab3571d165ba99b2dd6
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=01f5f394a3f922c89258cc69452946b034d86958c64a5445f4a901bc640cdd9a
+CLOUDFLARE_R2_BUCKET=a55c6e5cc8c8a996e287abce953ac92c
+CLOUDFLARE_R2_ENDPOINT=https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com
+CLOUDFLARE_R2_PUBLIC_URL=https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com
+```
+
+### Structure des dossiers (R2)
 
 | Dossier | Contenu |
 |---------|---------|
-| `/storage/portfolio/` | Photo de profil |
-| `/storage/companies/` | Logos des entreprises |
-| `/storage/formations/` | Logos des écoles |
-| `/storage/diplomas/` | Fichiers diplômes (PDF/images) |
-| `/storage/projects/` | Images des projets |
-| `/storage/realisations/` | Images des réalisations |
+| `portfolio/` | Photo de profil |
+| `companies/` | Logos des entreprises |
+| `formations/` | Logos des écoles |
+| `diplomas/` | Fichiers diplômes (PDF/images) |
+| `projects/` | Images des projets |
+| `realisations/` | Images des réalisations |
+| `messages/` | Fichiers des messages |
 
 ---
 
@@ -812,11 +855,11 @@ Remplace la photo de profil existante du portfolio.
 ```json
 {
     "success": true,
-    "url": "/storage/portfolio/photo_20250311_143052_abc12345.jpg",
+    "url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/portfolio/photo_20250311_143052_abc12345.jpg",
     "portfolio": {
         "id": 1,
         "first_name": "John",
-        "photo_url": "/storage/portfolio/photo_20250311_143052_abc12345.jpg",
+        "photo_url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/portfolio/photo_20250311_143052_abc12345.jpg",
         ...
     }
 }
@@ -849,11 +892,11 @@ Remplace le logo existant d'une entreprise.
 ```json
 {
     "success": true,
-    "url": "/storage/companies/company_1_20250311_143052_abc12345.png",
+    "url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/companies/company_1_20250311_143052_abc12345.png",
     "company": {
         "id": 1,
         "name": "Entreprise ABC",
-        "photo_url": "/storage/companies/company_1_20250311_143052_abc12345.png",
+        "photo_url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/companies/company_1_20250311_143052_abc12345.png",
         ...
     }
 }
@@ -886,11 +929,11 @@ Remplace le logo existant de la formation.
 ```json
 {
     "success": true,
-    "url": "/storage/formations/formation_1_logo_20250311_143052_abc12345.png",
+    "url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/formations/formation_1_logo_20250311_143052_abc12345.png",
     "formation": {
         "id": 1,
         "title": "BTS SIO SLAM",
-        "logo_url": "/storage/formations/formation_1_logo_20250311_143052_abc12345.png",
+        "logo_url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/formations/formation_1_logo_20250311_143052_abc12345.png",
         ...
     }
 }
@@ -919,11 +962,11 @@ Remplace le diplôme existant.
 ```json
 {
     "success": true,
-    "url": "/storage/diplomas/diploma_1_20250311_143052_abc12345.pdf",
+    "url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/diplomas/diploma_1_20250311_143052_abc12345.pdf",
     "formation": {
         "id": 1,
         "title": "BTS SIO SLAM",
-        "diploma_url": "/storage/diplomas/diploma_1_20250311_143052_abc12345.pdf",
+        "diploma_url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/diplomas/diploma_1_20250311_143052_abc12345.pdf",
         ...
     }
 }
@@ -960,11 +1003,11 @@ Supprime le diplôme.
 ```json
 {
     "success": true,
-    "url": "/storage/projects/project_1_20250311_143052_abc12345.jpg",
+    "url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/projects/project_1_20250311_143052_abc12345.jpg",
     "image": {
         "id": 1,
         "project_id": 1,
-        "image_url": "/storage/projects/project_1_20250311_143052_abc12345.jpg",
+        "image_url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/projects/project_1_20250311_143052_abc12345.jpg",
         "caption": "Page d'accueil",
         "description": "Description de l'image",
         "order": 1,
@@ -1001,7 +1044,7 @@ Au moins un champ doit être envoyé. Tu peux :
     "image": {
         "id": 1,
         "project_id": 1,
-        "image_url": "/storage/projects/project_1_20250311_150001_def67890.jpg",
+        "image_url": "https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com/projects/project_1_20250311_150001_def67890.jpg",
         "caption": "Nouvelle capture",
         "description": "Description mise à jour",
         "order": 1,
