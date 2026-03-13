@@ -346,6 +346,68 @@ class ImageUploadController extends Controller
     }
 
     /**
+     * Mettre à jour une image de projet
+     */
+    public function updateProjectImage(Request $request, int $imageId): JsonResponse
+    {
+        $request->validate([
+            'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'caption' => 'sometimes|nullable|string|max:255',
+            'description' => 'sometimes|nullable|string|max:5000',
+        ]);
+
+        $image = ProjectImage::find($imageId);
+        if (!$image) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Image non trouvée'
+            ], 404);
+        }
+
+        if (!$request->hasFile('image') && !$request->exists('caption') && !$request->exists('description')) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Aucune donnée à mettre à jour'
+            ], 422);
+        }
+
+        $updates = [];
+
+        if ($request->hasFile('image')) {
+            $result = $this->uploadService->replace(
+                $request->file('image'),
+                $image->image_url,
+                'projects',
+                "project_{$image->project_id}"
+            );
+
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $result['error']
+                ], 400);
+            }
+
+            $updates['image_url'] = $result['url'];
+        }
+
+        if ($request->exists('caption')) {
+            $updates['caption'] = $request->input('caption');
+        }
+
+        if ($request->exists('description')) {
+            $updates['description'] = $request->input('description');
+        }
+
+        $image->update($updates);
+
+        return response()->json([
+            'success' => true,
+            'image' => $image->fresh(),
+        ]);
+    }
+
+    /**
      * Lister les images d'un projet
      */
     public function listProjectImages(int $projectId): JsonResponse
@@ -454,6 +516,68 @@ class ImageUploadController extends Controller
         $image->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Mettre à jour une image de réalisation
+     */
+    public function updateRealisationImage(Request $request, int $imageId): JsonResponse
+    {
+        $request->validate([
+            'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'caption' => 'sometimes|nullable|string|max:255',
+            'description' => 'sometimes|nullable|string|max:5000',
+        ]);
+
+        $image = RealisationImage::find($imageId);
+        if (!$image) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Image non trouvée'
+            ], 404);
+        }
+
+        if (!$request->hasFile('image') && !$request->exists('caption') && !$request->exists('description')) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Aucune donnée à mettre à jour'
+            ], 422);
+        }
+
+        $updates = [];
+
+        if ($request->hasFile('image')) {
+            $result = $this->uploadService->replace(
+                $request->file('image'),
+                $image->image_url,
+                'realisations',
+                "realisation_{$image->realisation_id}"
+            );
+
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $result['error']
+                ], 400);
+            }
+
+            $updates['image_url'] = $result['url'];
+        }
+
+        if ($request->exists('caption')) {
+            $updates['caption'] = $request->input('caption');
+        }
+
+        if ($request->exists('description')) {
+            $updates['description'] = $request->input('description');
+        }
+
+        $image->update($updates);
+
+        return response()->json([
+            'success' => true,
+            'image' => $image->fresh(),
+        ]);
     }
 
     /**

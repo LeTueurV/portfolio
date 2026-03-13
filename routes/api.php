@@ -105,27 +105,33 @@ Route::prefix('dashboard')->group(function () {
 Route::prefix('images')->group(function () {
     // Portfolio
     Route::post('/portfolio', [ImageUploadController::class, 'uploadPortfolioPhoto']);
+    Route::put('/portfolio', [ImageUploadController::class, 'uploadPortfolioPhoto']);
     Route::delete('/portfolio', [ImageUploadController::class, 'deletePortfolioPhoto']);
 
     // Companies
     Route::post('/companies/{companyId}', [ImageUploadController::class, 'uploadCompanyPhoto']);
+    Route::put('/companies/{companyId}', [ImageUploadController::class, 'uploadCompanyPhoto']);
     Route::delete('/companies/{companyId}', [ImageUploadController::class, 'deleteCompanyPhoto']);
 
     // Formations
     Route::post('/formations/{formationId}/logo', [ImageUploadController::class, 'uploadFormationLogo']);
+    Route::put('/formations/{formationId}/logo', [ImageUploadController::class, 'uploadFormationLogo']);
     Route::delete('/formations/{formationId}/logo', [ImageUploadController::class, 'deleteFormationLogo']);
     Route::post('/formations/{formationId}/diploma', [ImageUploadController::class, 'uploadFormationDiploma']);
+    Route::put('/formations/{formationId}/diploma', [ImageUploadController::class, 'uploadFormationDiploma']);
     Route::delete('/formations/{formationId}/diploma', [ImageUploadController::class, 'deleteFormationDiploma']);
 
     // Projects (galerie d'images)
     Route::get('/projects/{projectId}', [ImageUploadController::class, 'listProjectImages']);
     Route::post('/projects/{projectId}', [ImageUploadController::class, 'uploadProjectImage']);
+    Route::put('/projects/image/{imageId}', [ImageUploadController::class, 'updateProjectImage']);
     Route::delete('/projects/image/{imageId}', [ImageUploadController::class, 'deleteProjectImage']);
     Route::put('/projects/{projectId}/order', [ImageUploadController::class, 'updateProjectImagesOrder']);
 
     // Realisations (galerie d'images)
     Route::get('/realisations/{realisationId}', [ImageUploadController::class, 'listRealisationImages']);
     Route::post('/realisations/{realisationId}', [ImageUploadController::class, 'uploadRealisationImage']);
+    Route::put('/realisations/image/{imageId}', [ImageUploadController::class, 'updateRealisationImage']);
     Route::delete('/realisations/image/{imageId}', [ImageUploadController::class, 'deleteRealisationImage']);
     Route::put('/realisations/{realisationId}/order', [ImageUploadController::class, 'updateRealisationImagesOrder']);
 });

@@ -797,6 +797,10 @@ Toutes les routes d'upload sont préfixées par `/images`. Les fichiers sont sto
 
 Upload la photo de profil du portfolio.
 
+#### PUT `/images/portfolio`
+
+Remplace la photo de profil existante du portfolio.
+
 **Body (multipart/form-data) :**
 
 | Champ | Type | Requis | Description |
@@ -829,6 +833,10 @@ Supprime la photo de profil.
 #### POST `/images/companies/{companyId}`
 
 Upload le logo d'une entreprise.
+
+#### PUT `/images/companies/{companyId}`
+
+Remplace le logo existant d'une entreprise.
 
 **Body (multipart/form-data) :**
 
@@ -863,6 +871,10 @@ Supprime le logo de l'entreprise.
 
 Upload le logo de l'école/établissement.
 
+#### PUT `/images/formations/{formationId}/logo`
+
+Remplace le logo existant de la formation.
+
 **Body (multipart/form-data) :**
 
 | Champ | Type | Requis | Description |
@@ -891,6 +903,10 @@ Supprime le logo de la formation.
 #### POST `/images/formations/{formationId}/diploma`
 
 Upload le diplôme (PDF ou image).
+
+#### PUT `/images/formations/{formationId}/diploma`
+
+Remplace le diplôme existant.
 
 **Body (multipart/form-data) :**
 
@@ -925,6 +941,7 @@ Supprime le diplôme.
 |---------|-------|-------------|
 | GET | `/images/projects/{projectId}` | Liste les images du projet |
 | POST | `/images/projects/{projectId}` | Upload une image |
+| PUT | `/images/projects/image/{imageId}` | Modifie l'image, la légende, la description, ou les trois |
 | DELETE | `/images/projects/image/{imageId}` | Supprime une image |
 | PUT | `/images/projects/{projectId}/order` | Met à jour l'ordre |
 
@@ -957,6 +974,43 @@ Supprime le diplôme.
 }
 ```
 
+#### PUT `/images/projects/image/{imageId}`
+
+Met à jour une image de projet existante.
+
+La route accepte une mise à jour partielle :
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| image | file | ❌ | Nouveau fichier image (jpeg, png, jpg, gif, webp) max 5MB |
+| caption | string | ❌ | Nouvelle légende |
+| description | string | ❌ | Nouvelle description détaillée |
+
+Au moins un champ doit être envoyé. Tu peux :
+
+- modifier seulement l'image
+- modifier seulement `caption`
+- modifier seulement `description`
+- modifier image + texte dans la même requête
+
+**Exemple de retour :**
+
+```json
+{
+    "success": true,
+    "image": {
+        "id": 1,
+        "project_id": 1,
+        "image_url": "/storage/projects/project_1_20250311_150001_def67890.jpg",
+        "caption": "Nouvelle capture",
+        "description": "Description mise à jour",
+        "order": 1,
+        "created_at": "2025-03-11T14:30:52.000000Z",
+        "updated_at": "2025-03-11T15:00:01.000000Z"
+    }
+}
+```
+
 #### PUT `/images/projects/{projectId}/order`
 
 Met à jour l'ordre des images.
@@ -983,8 +1037,23 @@ Mêmes routes que pour les projets, avec `/realisations` au lieu de `/projects`.
 |---------|-------|-------------|
 | GET | `/images/realisations/{realisationId}` | Liste les images |
 | POST | `/images/realisations/{realisationId}` | Upload une image |
+| PUT | `/images/realisations/image/{imageId}` | Modifie l'image, la légende, la description, ou les trois |
 | DELETE | `/images/realisations/image/{imageId}` | Supprime une image |
 | PUT | `/images/realisations/{realisationId}/order` | Met à jour l'ordre |
+
+#### PUT `/images/realisations/image/{imageId}`
+
+Met à jour une image de réalisation existante.
+
+**Body (multipart/form-data) :**
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| image | file | ❌ | Nouveau fichier image (jpeg, png, jpg, gif, webp) max 5MB |
+| caption | string | ❌ | Nouvelle légende |
+| description | string | ❌ | Nouvelle description détaillée |
+
+Au moins un champ doit être envoyé.
 
 ---
 
@@ -1067,6 +1136,45 @@ if (data.success) {
 }
 ```
 
+### Modifier une image de projet
+
+```javascript
+const imageId = 5;
+const formData = new FormData();
+
+// Exemple: modifier seulement le texte
+formData.append('caption', 'Nouvelle légende');
+formData.append('description', 'Texte mis à jour sans changer le fichier');
+
+const response = await fetch(`http://localhost:8000/api/images/projects/image/${imageId}`, {
+    method: 'PUT',
+    body: formData
+});
+
+const data = await response.json();
+if (data.success) {
+    console.log('Image projet modifiée:', data.image);
+}
+```
+
+### Remplacer uniquement le logo d'une entreprise
+
+```javascript
+const companyId = 1;
+const formData = new FormData();
+formData.append('image', fileInput.files[0]);
+
+const response = await fetch(`http://localhost:8000/api/images/companies/${companyId}`, {
+    method: 'PUT',
+    body: formData
+});
+
+const data = await response.json();
+if (data.success) {
+    console.log('Logo remplacé:', data.url);
+}
+```
+
 ### Supprimer une image
 
 ```javascript
@@ -1084,14 +1192,14 @@ await fetch('http://localhost:8000/api/images/projects/image/5', { method: 'DELE
 
 ## Résumé des routes Images
 
-| Entité | Upload | Delete | Notes |
-|--------|--------|--------|-------|
-| Portfolio | POST `/images/portfolio` | DELETE `/images/portfolio` | Photo de profil unique |
-| Company | POST `/images/companies/{id}` | DELETE `/images/companies/{id}` | Logo unique |
-| Formation Logo | POST `/images/formations/{id}/logo` | DELETE `/images/formations/{id}/logo` | Logo unique |
-| Formation Diplôme | POST `/images/formations/{id}/diploma` | DELETE `/images/formations/{id}/diploma` | PDF ou image |
-| Project | POST `/images/projects/{id}` | DELETE `/images/projects/image/{imageId}` | Galerie multi-images |
-| Realisation | POST `/images/realisations/{id}` | DELETE `/images/realisations/image/{imageId}` | Galerie multi-images |
+| Entité | Create | Update | Delete | Notes |
+|--------|--------|--------|--------|-------|
+| Portfolio | POST `/images/portfolio` | PUT `/images/portfolio` | DELETE `/images/portfolio` | Photo de profil unique |
+| Company | POST `/images/companies/{id}` | PUT `/images/companies/{id}` | DELETE `/images/companies/{id}` | Logo unique |
+| Formation Logo | POST `/images/formations/{id}/logo` | PUT `/images/formations/{id}/logo` | DELETE `/images/formations/{id}/logo` | Logo unique |
+| Formation Diplôme | POST `/images/formations/{id}/diploma` | PUT `/images/formations/{id}/diploma` | DELETE `/images/formations/{id}/diploma` | PDF ou image |
+| Project | POST `/images/projects/{id}` | PUT `/images/projects/image/{imageId}` | DELETE `/images/projects/image/{imageId}` | Galerie multi-images, update partiel possible |
+| Realisation | POST `/images/realisations/{id}` | PUT `/images/realisations/image/{imageId}` | DELETE `/images/realisations/image/{imageId}` | Galerie multi-images, update partiel possible |
 
 ---
 
