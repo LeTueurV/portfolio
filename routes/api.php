@@ -140,41 +140,85 @@ Route::prefix('dashboard')->group(function () {
 });
 
 // ==========================================
-// ROUTES IMAGES (Upload)
+// ROUTES IMAGES (Upload, modification, suppression)
 // ==========================================
 
 Route::prefix('images')->group(function () {
-    // Portfolio
-    Route::post('/portfolio', [ImageUploadController::class, 'uploadPortfolioPhoto']);
-    Route::put('/portfolio', [ImageUploadController::class, 'uploadPortfolioPhoto']);
-    Route::delete('/portfolio', [ImageUploadController::class, 'deletePortfolioPhoto']);
+    // ==========================================
+    // PORTFOLIO
+    // ==========================================
+    Route::prefix('portfolio')->group(function () {
+        Route::post('/', [ImageUploadController::class, 'uploadPortfolioPhoto']);
+        Route::put('/', [ImageUploadController::class, 'uploadPortfolioPhoto']);
+        Route::delete('/', [ImageUploadController::class, 'deletePortfolioPhoto']);
+    });
 
-    // Companies
-    Route::post('/companies/{companyId}', [ImageUploadController::class, 'uploadCompanyPhoto']);
-    Route::put('/companies/{companyId}', [ImageUploadController::class, 'uploadCompanyPhoto']);
-    Route::delete('/companies/{companyId}', [ImageUploadController::class, 'deleteCompanyPhoto']);
+    // ==========================================
+    // COMPANIES
+    // ==========================================
+    Route::prefix('companies')->group(function () {
+        Route::post('/{companyId}', [ImageUploadController::class, 'uploadCompanyPhoto']);
+        Route::delete('/{companyId}', [ImageUploadController::class, 'deleteCompanyPhoto']);
+    });
 
-    // Formations
-    Route::post('/formations/{formationId}/logo', [ImageUploadController::class, 'uploadFormationLogo']);
-    Route::put('/formations/{formationId}/logo', [ImageUploadController::class, 'uploadFormationLogo']);
-    Route::delete('/formations/{formationId}/logo', [ImageUploadController::class, 'deleteFormationLogo']);
-    Route::post('/formations/{formationId}/diploma', [ImageUploadController::class, 'uploadFormationDiploma']);
-    Route::put('/formations/{formationId}/diploma', [ImageUploadController::class, 'uploadFormationDiploma']);
-    Route::delete('/formations/{formationId}/diploma', [ImageUploadController::class, 'deleteFormationDiploma']);
+    // ==========================================
+    // FORMATIONS
+    // ==========================================
+    Route::prefix('formations/{formationId}')->group(function () {
+        // Logo
+        Route::prefix('logo')->group(function () {
+            Route::post('/', [ImageUploadController::class, 'uploadFormationLogo']);
+            Route::put('/', [ImageUploadController::class, 'uploadFormationLogo']);
+            Route::delete('/', [ImageUploadController::class, 'deleteFormationLogo']);
+        });
 
-    // Projects (galerie d'images)
-    Route::get('/projects/{projectId}', [ImageUploadController::class, 'listProjectImages']);
-    Route::post('/projects/{projectId}', [ImageUploadController::class, 'uploadProjectImage']);
-    Route::put('/projects/image/{imageId}', [ImageUploadController::class, 'updateProjectImage']);
-    Route::delete('/projects/image/{imageId}', [ImageUploadController::class, 'deleteProjectImage']);
-    Route::put('/projects/{projectId}/order', [ImageUploadController::class, 'updateProjectImagesOrder']);
+        // Diploma
+        Route::prefix('diploma')->group(function () {
+            Route::post('/', [ImageUploadController::class, 'uploadFormationDiploma']);
+            Route::put('/', [ImageUploadController::class, 'uploadFormationDiploma']);
+            Route::delete('/', [ImageUploadController::class, 'deleteFormationDiploma']);
+        });
+    });
 
-    // Realisations (galerie d'images)
-    Route::get('/realisations/{realisationId}', [ImageUploadController::class, 'listRealisationImages']);
-    Route::post('/realisations/{realisationId}', [ImageUploadController::class, 'uploadRealisationImage']);
-    Route::put('/realisations/image/{imageId}', [ImageUploadController::class, 'updateRealisationImage']);
-    Route::delete('/realisations/image/{imageId}', [ImageUploadController::class, 'deleteRealisationImage']);
-    Route::put('/realisations/{realisationId}/order', [ImageUploadController::class, 'updateRealisationImagesOrder']);
+    // ==========================================
+    // PROJECTS - Galerie d'images
+    // ==========================================
+    Route::prefix('projects')->group(function () {
+        // Lister et ajouter des images
+        Route::get('/{projectId}', [ImageUploadController::class, 'listProjectImages']);
+        Route::post('/{projectId}', [ImageUploadController::class, 'uploadProjectImage']);
+        
+        // Supprimer plusieurs images
+        Route::delete('/{projectId}', [ImageUploadController::class, 'deleteProjectImages']);
+        
+        // Mettre à jour l'ordre
+        Route::put('/{projectId}/order', [ImageUploadController::class, 'updateProjectImagesOrder']);
+
+        // Image individuelle
+        Route::get('/image/{imageId}', [ImageUploadController::class, 'getProjectImage']);
+        Route::put('/image/{imageId}', [ImageUploadController::class, 'updateProjectImage']);
+        Route::delete('/image/{imageId}', [ImageUploadController::class, 'deleteProjectImage']);
+    });
+
+    // ==========================================
+    // REALISATIONS - Galerie d'images
+    // ==========================================
+    Route::prefix('realisations')->group(function () {
+        // Lister et ajouter des images
+        Route::get('/{realisationId}', [ImageUploadController::class, 'listRealisationImages']);
+        Route::post('/{realisationId}', [ImageUploadController::class, 'uploadRealisationImage']);
+        
+        // Supprimer plusieurs images
+        Route::delete('/{realisationId}', [ImageUploadController::class, 'deleteRealisationImages']);
+        
+        // Mettre à jour l'ordre
+        Route::put('/{realisationId}/order', [ImageUploadController::class, 'updateRealisationImagesOrder']);
+
+        // Image individuelle
+        Route::get('/image/{imageId}', [ImageUploadController::class, 'getRealisationImage']);
+        Route::put('/image/{imageId}', [ImageUploadController::class, 'updateRealisationImage']);
+        Route::delete('/image/{imageId}', [ImageUploadController::class, 'deleteRealisationImage']);
+    });
 });
 
 // Routes legacy pour compatibilité
