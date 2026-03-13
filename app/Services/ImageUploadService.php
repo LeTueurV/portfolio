@@ -81,6 +81,11 @@ class ImageUploadService
         $filename = $this->generateFilename($prefix, $extension);
 
         try {
+            // Vérifier que le disque R2 existe et est configuré
+            if (!config('filesystems.disks.r2')) {
+                throw new \Exception('Disque R2 non configuré. Vérifiez filesystems.php');
+            }
+
             // Stocker le fichier sur Cloudflare R2
             $path = $file->storeAs($folder, $filename, 'r2');
             
@@ -95,6 +100,14 @@ class ImageUploadService
                 'error' => null
             ];
         } catch (\Exception $e) {
+            \Log::error('ImageUpload Error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'folder' => $folder,
+                'filename' => $filename ?? 'unknown'
+            ]);
+            
             return [
                 'success' => false,
                 'url' => null,

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\DashboardApiController;
+use App\Http\Controllers\TestR2Controller;
 
 // Route ping pour garder le serveur éveillé
 Route::get('/ping', function () {
@@ -13,6 +14,9 @@ Route::get('/ping', function () {
         'timestamp' => now()->toISOString()
     ]);
 });
+
+// Route de test R2 (DEBUG)
+Route::get('/test-r2', [TestR2Controller::class, 'testR2']);
 
 // ==========================================
 // ROUTES PUBLIQUES (Lecture seule)
