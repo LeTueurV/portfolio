@@ -92,7 +92,7 @@ Dans le dashboard Render:
 ### 🚨 Résolution de problèmes
 
 **"Port not detected":**
-- Vérifier que `docker-entrypoint.sh` est présent et exécutable
+- Vérifier que le port 8080 est exposé dans le Dockerfile
 - Voir les logs Render pour erreurs de démarrage
 
 **"App keeps crashing":**

@@ -96,14 +96,8 @@ RUN chmod -R 775 storage bootstrap/cache
 RUN rm -f public/storage || true
 
 ############################################
-# Copy entrypoint script
-############################################
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
-
-############################################
 # Container startup - Use Render PORT variable
 ############################################
 EXPOSE 8080
 
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080}

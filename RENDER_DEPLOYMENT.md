@@ -85,8 +85,7 @@ Dans **Settings → Health Check:**
 2. Render va:
    - Clone le repository
    - Build l'image Docker
-   - Exécuter le `docker-entrypoint.sh`
-   - Lancer le serveur
+   - Lancer le serveur Laravel
 
 3. Attendre que le statut passe à **"Live"** (5-10 minutes)
 
@@ -127,11 +126,11 @@ curl https://api.render.com/v1/services/{service-id}/logs
 **Erreur: "No HTTP ports detected"**
 - Port n'est pas exposé correctement
 - **Solution:** Vérifier que le Dockerfile expose le port avec `EXPOSE 8080`
-- Vérifier que `docker-entrypoint.sh` est exécutable
+- Vérifier que le serveur démarre correctement dans les logs
 
 **Erreur: "APP_KEY missing"**
 - La clé n'est pas générée
-- **Solution:** Le script `docker-entrypoint.sh` devrait la générer automatiquement
+- **Solution:** Render génère automatiquement la clé au premier démarrage
 
 **Erreur: "Database locked" (SQLite)**
 - Concurrent access sur la base de données
@@ -214,7 +213,7 @@ Si vous rencontrez des problèmes:
 
 | Problème | Cause | Solution |
 |----------|-------|----------|
-| Port non détecté | CMD incorrect | Vérifier `docker-entrypoint.sh` |
+| Port non détecté | EXPOSE 8080 manquant | Vérifier le Dockerfile |
 | App crash au démarrage | Migrations échouent | Vérifier les logs Render |
 | Images non uploadées | Credentials R2 manquants | Ajouter env vars |
 | Base de données reset | Pas de volume persistent | Créer un disque Render |
