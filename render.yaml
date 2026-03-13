@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: portfolio-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/ping
+    
+    # Région de déploiement (modifier selon vos préférences)
+    region: iad
+    
+    # Variables d'environnement
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        fromService:
+          name: portfolio-api
+          property: host
+      - key: DB_CONNECTION
+        value: sqlite
+      - key: FILESYSTEM_DISK
+        value: r2
+      
+      # Cloudflare R2 - À configurer dans le dashboard Render
+      - key: CLOUDFLARE_R2_ACCESS_KEY_ID
+        sync: false  # À remplir manuellement dans le dashboard
+      - key: CLOUDFLARE_R2_SECRET_ACCESS_KEY
+        sync: false  # À remplir manuellement dans le dashboard
+      - key: CLOUDFLARE_R2_BUCKET
+        value: a55c6e5cc8c8a996e287abce953ac92c
+      - key: CLOUDFLARE_R2_ENDPOINT
+        value: https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com
+      - key: CLOUDFLARE_R2_PUBLIC_URL
+        value: https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com
+    
+    # Volume pour la base de données SQLite
+    disk:
+      name: sqlite-storage
+      mountPath: /app/database
+      sizeGB: 1
+    
+    # Logs
+    logDrain: false
+
+# Créer un volume persistant pour la base de données
+disks:
+  - name: sqlite-storage
+    sizeGB: 1

@@ -1,8 +1,18 @@
 # Documentation API Portfolio - Context.MD
 
-## 📋 Changements récents (Mars 2025)
+## 📋 Changements récents (Mars 2025-2026)
 
-### Migration vers Cloudflare R2 pour le stockage d'images
+### 🚀 Déploiement Render.com (Mars 2026)
+
+**Nouveau:** Support complet pour Render.com avec:
+- ✅ Dockerfile optimisé pour Render
+- ✅ Script d'entrypoint pour migrations automatiques
+- ✅ Configuration `render.yaml` avec variables Cloudflare R2
+- ✅ Guide complet: [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)
+
+Pour déployer rapidement, consultez [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md).
+
+### Migration vers Cloudflare R2 pour le stockage d'images (Mars 2025)
 
 Depuis **Mars 2025**, toutes les images sont stockées sur **Cloudflare R2** au lieu du serveur local. Les URLs retournées sont maintenant au format :
 

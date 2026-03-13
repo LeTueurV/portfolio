@@ -96,13 +96,14 @@ RUN chmod -R 775 storage bootstrap/cache
 RUN rm -f public/storage || true
 
 ############################################
-# Render dynamic port
+# Copy entrypoint script
 ############################################
-ENV PORT=10000
-EXPOSE 10000
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 
+############################################
+# Container startup - Use Render PORT variable
+############################################
+EXPOSE 8080
 
-############################################
-# Start Laravel
-############################################
-CMD php artisan serve --host=0.0.0.0 --port=$PORT
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

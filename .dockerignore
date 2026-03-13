@@ -21,3 +21,19 @@ vendor/*/tests
 vendor/*/docs
 docker-compose.override.yml
 .env.local
+
+# Documentation files (reference only)
+README.md
+PORTFOLIO_README.md
+CLOUDFLARE_R2_SETUP.md
+INSTALLATION_R2_COMPLETE.md
+RENDER_DEPLOYMENT.md
+Context.MD
+
+# Scripts folder (optional scripts)
+scripts/
+
+# Render config (reference)
+render.yaml
+
+
