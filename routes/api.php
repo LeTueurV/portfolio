@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\DashboardApiController;
-use App\Http\Controllers\TestR2Controller;
 
 // Route ping pour garder le serveur éveillé
 Route::get('/ping', function () {
@@ -15,8 +15,45 @@ Route::get('/ping', function () {
     ]);
 });
 
-// Route de test R2 (DEBUG)
-Route::get('/test-r2', [TestR2Controller::class, 'testR2']);
+// Route de test R2 (DEBUG) - Simple inline
+Route::get('/test-r2-simple', function () {
+    return response()->json([
+        'status' => 'endpoint works',
+        'disk_configured' => env('FILESYSTEM_DISK'),
+        'bucket_name' => env('CLOUDFLARE_R2_BUCKET'),
+        'has_key' => !empty(env('CLOUDFLARE_R2_ACCESS_KEY_ID')),
+        'has_secret' => !empty(env('CLOUDFLARE_R2_SECRET_ACCESS_KEY')),
+    ]);
+});
+
+// Route de test R2 - Avec Storage
+Route::get('/test-r2', function () {
+    try {
+        $response = [
+            'success' => true,
+            'bucket' => env('CLOUDFLARE_R2_BUCKET'),
+            'filesystem_disk' => env('FILESYSTEM_DISK'),
+            'endpoint' => env('CLOUDFLARE_R2_ENDPOINT'),
+            'disk_exists' => true
+        ];
+        
+        // Essayer d'accéder au disque R2
+        $disk = Storage::disk('r2');
+        $response['disk_accessible'] = true;
+        $response['message'] = 'Disque R2 OK';
+        
+        return response()->json($response);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'bucket' => env('CLOUDFLARE_R2_BUCKET'),
+            'filesystem_disk' => env('FILESYSTEM_DISK'),
+        ], 500);
+    }
+});
 
 // ==========================================
 // ROUTES PUBLIQUES (Lecture seule)
