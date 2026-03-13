@@ -805,26 +805,6 @@ class ImageUploadController extends Controller
         }
     }
 
-    /**
-     * Mettre à jour l'ordre des images d'une réalisation
-     */
-    public function updateRealisationImagesOrder(Request $request, int $realisationId): JsonResponse
-    {
-        $request->validate([
-            'images' => 'required|array',
-            'images.*.id' => 'required|integer',
-            'images.*.order' => 'required|integer',
-        ]);
-
-        foreach ($request->input('images') as $imageData) {
-            RealisationImage::where('id', $imageData['id'])
-                ->where('realisation_id', $realisationId)
-                ->update(['order' => $imageData['order']]);
-        }
-
-        return response()->json(['success' => true]);
-    }
-
     // ==========================================
     // LEGACY (compatibilité)
     // ==========================================
