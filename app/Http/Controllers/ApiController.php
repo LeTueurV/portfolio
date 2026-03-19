@@ -26,7 +26,7 @@ class ApiController extends Controller
 
     public function projects(): JsonResponse
     {
-        $projects = Project::with('tags', 'competences')->get();
+        $projects = Project::with('tags', 'competences', 'company')->get();
         return response()->json($projects);
     }
 
