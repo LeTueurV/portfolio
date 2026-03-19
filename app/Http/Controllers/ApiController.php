@@ -52,7 +52,7 @@ class ApiController extends Controller
     {
         $portfolio = Portfolio::first();
         $stages = Stage::with('company', 'competences')->get();
-        $projects = Project::with('tags', 'competences')->get();
+        $projects = Project::with('tags', 'competences', 'company')->get();
         $realisations = Realisation::with('tags', 'company')->get();
         $companies = Company::all();
         $competences = Competence::all();
