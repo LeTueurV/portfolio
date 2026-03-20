@@ -12,7 +12,7 @@ info:
 servers:
   - url: http://localhost:8000/api
     description: Local development
-  - url: https://portfolio.render.com/api
+  - url: https://portfolio-mlb3.onrender.com/api
     description: Production (Render)
 
 tags:

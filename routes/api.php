@@ -17,16 +17,34 @@ Route::get('/ping', function () {
     ]);
 });
 
-// Route pour Swagger/OpenAPI documentation
+// Route pour Swagger/OpenAPI documentation (dynamique, basée sur APP_URL)
 Route::get('/docs', function () {
+    $yaml = file_get_contents(base_path('openapi.yaml'));
+    $appUrl = config('app.url');
+    $spec = str_replace(
+        'https://portfolio-mlb3.onrender.com/api',
+        rtrim($appUrl, '/') . '/api',
+        $yaml
+    );
+    
     return view('swagger', [
-        'spec' => file_get_contents(base_path('openapi.yaml'))
+        'spec' => $spec
     ]);
 })->name('api.docs');
 
-// Route pour OpenAPI spec en YAML
+// Route pour OpenAPI spec en YAML (dynamique, basée sur APP_URL)
 Route::get('/openapi.yaml', function () {
-    return response()->file(base_path('openapi.yaml'), [
+    $yaml = file_get_contents(base_path('openapi.yaml'));
+    
+    // Remplacer les URLs serveur par l'URL réelle (APP_URL)
+    $appUrl = config('app.url');
+    $yaml = str_replace(
+        'https://portfolio-mlb3.onrender.com/api',
+        rtrim($appUrl, '/') . '/api',
+        $yaml
+    );
+    
+    return response($yaml, 200, [
         'Content-Type' => 'application/x-yaml'
     ]);
 })->name('api.openapi');

@@ -34,7 +34,7 @@ return [
 
     'allowed_origins_patterns' => [
         '#http://localhost.*#',
-        '#https://.*\.render\.com#', // Render deployments
+        '#https://.*\.onrender\.com#', // Render deployments
     ],
 
     'allowed_headers' => ['*'],
