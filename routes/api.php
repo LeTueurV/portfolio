@@ -3,8 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\DashboardApiController;
+use App\Http\Middleware\JwtMiddleware;
 
 // Route ping pour garder le serveur éveillé
 Route::get('/ping', function () {
@@ -13,6 +15,44 @@ Route::get('/ping', function () {
         'message' => 'pong',
         'timestamp' => now()->toISOString()
     ]);
+});
+
+// Route pour Swagger/OpenAPI documentation
+Route::get('/docs', function () {
+    return view('swagger', [
+        'spec' => file_get_contents(base_path('openapi.yaml'))
+    ]);
+})->name('api.docs');
+
+// Route pour OpenAPI spec en YAML
+Route::get('/openapi.yaml', function () {
+    return response()->file(base_path('openapi.yaml'), [
+        'Content-Type' => 'application/x-yaml'
+    ]);
+})->name('api.openapi');
+
+// ==========================================
+// ROUTES AUTHENTIFICATION
+// ==========================================
+
+Route::prefix('auth')->group(function () {
+    // Register (Créer un nouvel utilisateur - Lecteur par défaut)
+    Route::post('/register', [AuthController::class, 'register']);
+    
+    // Login (Obtenir un token JWT)
+    Route::post('/login', [AuthController::class, 'login']);
+    
+    // Routes protégées par JWT
+    Route::middleware(JwtMiddleware::class)->group(function () {
+        // Refresh token
+        Route::post('/refresh', [AuthController::class, 'refresh']);
+        
+        // Logout
+        Route::post('/logout', [AuthController::class, 'logout']);
+        
+        // Get current user profile
+        Route::get('/me', [AuthController::class, 'me']);
+    });
 });
 
 // Route de test R2 (DEBUG) - Simple inline
@@ -76,10 +116,11 @@ Route::get('/all', [ApiController::class, 'all']);
 Route::get('/messages', [DashboardApiController::class, 'listActiveMessages']);
 
 // ==========================================
-// ROUTES DASHBOARD (CRUD complet)
+// ROUTES DASHBOARD PROTÉGÉES (CRUD complet - Admin seulement)
 // ==========================================
 
-Route::prefix('dashboard')->group(function () {
+Route::prefix('dashboard')->middleware(['App\\Http\\Middleware\\JwtMiddleware:admin'])
+->group(function () {
 
     // Stats
     Route::get('/stats', [DashboardApiController::class, 'getStats']);
@@ -140,10 +181,11 @@ Route::prefix('dashboard')->group(function () {
 });
 
 // ==========================================
-// ROUTES IMAGES (Upload, modification, suppression)
+// ROUTES IMAGES PROTÉGÉES (Upload, modification, suppression - Admin seulement)
 // ==========================================
 
-Route::prefix('images')->group(function () {
+Route::prefix('images')->middleware(['App\\Http\\Middleware\\JwtMiddleware:admin'])
+->group(function () {
     // ==========================================
     // PORTFOLIO
     // ==========================================
@@ -224,3 +266,4 @@ Route::prefix('images')->group(function () {
 // Routes legacy pour compatibilité
 Route::put('/projects/{id}/description', [ImageUploadController::class, 'updateProjectLongDescription']);
 Route::put('/realisations/{id}/description', [ImageUploadController::class, 'updateRealisationLongDescription']);
+

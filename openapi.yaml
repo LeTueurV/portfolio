@@ -1,0 +1,1523 @@
+openapi: 3.0.0
+info:
+  title: Portfolio API
+  description: API REST complète pour gérer et consulter un portfolio professionnel avec authentification JWT
+  version: 1.0.0
+  contact:
+    name: Support
+    email: support@portfolio.local
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000/api
+    description: Local development
+  - url: https://portfolio.render.com/api
+    description: Production (Render)
+
+tags:
+  - name: Auth
+    description: Authentification JWT (Register, Login, Refresh, Logout)
+  - name: Public
+    description: API publique - Lecture seule (pas de token requis)
+  - name: Dashboard
+    description: Dashboard admin - CRUD complet (nécessite rôle admin)
+  - name: Images
+    description: Gestion des images (upload, modif, suppression - nécessite rôle admin)
+  - name: Health
+    description: Endpoints de santé et debug
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Token JWT obtenu via POST /auth/login. Format: Bearer <token>"
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [admin, reader]
+        created_at:
+          type: string
+          format: date-time
+
+    Portfolio:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        bio:
+          type: string
+        profile_picture_url:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        github_url:
+          type: string
+        linkedin_url:
+          type: string
+        location:
+          type: string
+
+    Company:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        sector:
+          type: string
+        location:
+          type: string
+        website:
+          type: string
+        logo_url:
+          type: string
+
+    Competence:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+          example: "PHP"
+        label:
+          type: string
+          example: "PHP Backend Development"
+        bloc:
+          type: string
+
+    Stage:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        company_id:
+          type: integer
+        company:
+          $ref: '#/components/schemas/Company'
+        competences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Competence'
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+          example: "web|mobile|desktop|other"
+        description:
+          type: string
+        long_description:
+          type: string
+        year:
+          type: integer
+        company_id:
+          type: integer
+          nullable: true
+        company:
+          $ref: '#/components/schemas/Company'
+
+    Realisation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+        long_description:
+          type: string
+        company_id:
+          type: integer
+          nullable: true
+
+    Formation:
+      type: object
+      properties:
+        id:
+          type: integer
+        school:
+          type: string
+        degree:
+          type: string
+        field:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        logo_url:
+          type: string
+
+    ImportantMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        active:
+          type: boolean
+        display_from:
+          type: string
+          format: date-time
+        display_until:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+paths:
+  /ping:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      responses:
+        '200':
+          description: API en ligne
+
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Créer un nouveau compte
+      description: Inscrit un nouvel utilisateur avec rôle "reader". Min 8 caractères pour le mot de passe.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, password_confirmation]
+              properties:
+                name:
+                  type: string
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "SecurePass123!"
+                password_confirmation:
+                  type: string
+                  example: "SecurePass123!"
+      responses:
+        '201':
+          description: Utilisateur créé
+        '422':
+          description: Validation échouée
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Se connecter
+      description: |
+        **Comptes par défaut:**
+        - Admin: admin@portfolio.local / AdminPassword123!
+        - Reader: reader@portfolio.local / ReaderPassword123!
+        
+        Retourne un token JWT valide 60 min.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "admin@portfolio.local"
+                password:
+                  type: string
+                  example: "AdminPassword123!"
+      responses:
+        '200':
+          description: Connecté - Retourne access_token à utiliser en Bearer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  access_token:
+                    type: string
+                    description: JWT token - Utiliser dans Authorization header
+                  token_type:
+                    type: string
+                    example: "Bearer"
+                  expires_in:
+                    type: integer
+                    description: Durée en secondes (3600 = 1h)
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Identifiants invalides
+
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Renouveler le token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Nouveau token
+
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Profil utilisateur connecté
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Infos utilisateur
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Se déconnecter
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Déconnecté
+
+  /portfolio:
+    get:
+      tags:
+        - Public
+      summary: Infos du portfolio
+      responses:
+        '200':
+          description: Portfolio
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portfolio'
+
+  /stages:
+    get:
+      tags:
+        - Public
+      summary: Lister les stages
+      responses:
+        '200':
+          description: Stages avec entreprises et compétences
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stage'
+
+  /projects:
+    get:
+      tags:
+        - Public
+      summary: Lister les projets
+      responses:
+        '200':
+          description: Projets avec tags et compétences
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+
+  /projects/{id}:
+    get:
+      tags:
+        - Public
+      summary: Détail d'un projet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Projet avec images
+        '404':
+          description: Non trouvé
+
+  /realisations:
+    get:
+      tags:
+        - Public
+      summary: Lister les réalisations
+      responses:
+        '200':
+          description: Réalisations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Realisation'
+
+  /realisations/{id}:
+    get:
+      tags:
+        - Public
+      summary: Détail d'une réalisation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Réalisation avec images
+
+  /companies:
+    get:
+      tags:
+        - Public
+      summary: Lister les entreprises
+      responses:
+        '200':
+          description: Entreprises
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Company'
+
+  /competences:
+    get:
+      tags:
+        - Public
+      summary: Lister les compétences
+      responses:
+        '200':
+          description: Compétences par bloc
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Competence'
+
+  /formations:
+    get:
+      tags:
+        - Public
+      summary: Lister les formations
+      responses:
+        '200':
+          description: Formations/diplômes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Formation'
+
+  /messages:
+    get:
+      tags:
+        - Public
+      summary: Messages actifs
+      description: Messages valides pour l'affichage public
+      responses:
+        '200':
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImportantMessage'
+
+  /all:
+    get:
+      tags:
+        - Public
+      summary: Toutes les données en un seul appel
+      description: Portfolio, stages, projets, réalisations, entreprises, compétences
+      responses:
+        '200':
+          description: Données complètes
+
+  /dashboard/stats:
+    get:
+      tags:
+        - Dashboard
+      summary: Statistiques du portfolio
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Stats (projects count, stages, etc)
+
+  /dashboard/portfolio:
+    get:
+      tags:
+        - Dashboard
+      summary: Récupérer le portfolio (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Portfolio
+
+    put:
+      tags:
+        - Dashboard
+      summary: Modifier le portfolio (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Portfolio'
+      responses:
+        '200':
+          description: Modifié
+
+  /dashboard/companies:
+    get:
+      tags:
+        - Dashboard
+      summary: Lister les entreprises (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Entreprises
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Company'
+
+    post:
+      tags:
+        - Dashboard
+      summary: Créer une entreprise
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                sector:
+                  type: string
+                location:
+                  type: string
+                website:
+                  type: string
+                logo_url:
+                  type: string
+      responses:
+        '201':
+          description: Créée
+
+  /dashboard/companies/{id}:
+    get:
+      tags:
+        - Dashboard
+      summary: Détail d'une entreprise
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Entreprise
+
+    put:
+      tags:
+        - Dashboard
+      summary: Modifier une entreprise
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Company'
+      responses:
+        '200':
+          description: Modifiée
+
+    delete:
+      tags:
+        - Dashboard
+      summary: Supprimer une entreprise
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Supprimée
+
+  /dashboard/projects:
+    get:
+      tags:
+        - Dashboard
+      summary: Lister les projets (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Projets
+
+    post:
+      tags:
+        - Dashboard
+      summary: Créer un projet
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, type]
+              properties:
+                title:
+                  type: string
+                type:
+                  type: string
+                  enum: [web, mobile, desktop, other]
+                description:
+                  type: string
+                long_description:
+                  type: string
+                year:
+                  type: integer
+                company_id:
+                  type: integer
+                  nullable: true
+      responses:
+        '201':
+          description: Créé
+
+  /dashboard/projects/{id}:
+    get:
+      tags:
+        - Dashboard
+      summary: Détail d'un projet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Projet
+
+    put:
+      tags:
+        - Dashboard
+      summary: Modifier un projet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: Modifié
+
+    delete:
+      tags:
+        - Dashboard
+      summary: Supprimer un projet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Supprimé
+
+  /dashboard/stages:
+    get:
+      tags:
+        - Dashboard
+      summary: Lister les stages
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Stages
+
+    post:
+      tags:
+        - Dashboard
+      summary: Créer un stage
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, company_id]
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                start_date:
+                  type: string
+                  format: date
+                end_date:
+                  type: string
+                  format: date
+                company_id:
+                  type: integer
+      responses:
+        '201':
+          description: Créé
+
+  /dashboard/stages/{id}:
+    get:
+      tags:
+        - Dashboard
+      summary: Détail d'un stage
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Stage
+
+    put:
+      tags:
+        - Dashboard
+      summary: Modifier un stage
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Stage'
+      responses:
+        '200':
+          description: Modifié
+
+    delete:
+      tags:
+        - Dashboard
+      summary: Supprimer un stage
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Supprimé
+
+  /dashboard/realisations:
+    get:
+      tags:
+        - Dashboard
+      summary: Lister les réalisations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Réalisations
+
+    post:
+      tags:
+        - Dashboard
+      summary: Créer une réalisation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                type:
+                  type: string
+                description:
+                  type: string
+                long_description:
+                  type: string
+                company_id:
+                  type: integer
+                  nullable: true
+      responses:
+        '201':
+          description: Créée
+
+  /dashboard/realisations/{id}:
+    get:
+      tags:
+        - Dashboard
+      summary: Détail d'une réalisation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Réalisation
+
+    put:
+      tags:
+        - Dashboard
+      summary: Modifier une réalisation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Realisation'
+      responses:
+        '200':
+          description: Modifiée
+
+    delete:
+      tags:
+        - Dashboard
+      summary: Supprimer une réalisation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Supprimée
+
+  /dashboard/competences:
+    get:
+      tags:
+        - Dashboard
+      summary: Lister les compétences
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Compétences
+
+    post:
+      tags:
+        - Dashboard
+      summary: Créer une compétence
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, label]
+              properties:
+                code:
+                  type: string
+                  example: "PHP"
+                label:
+                  type: string
+                  example: "PHP Backend"
+                bloc:
+                  type: string
+                  example: "B1.1"
+      responses:
+        '201':
+          description: Créée
+
+  /dashboard/competences/{id}:
+    get:
+      tags:
+        - Dashboard
+      summary: Détail d'une compétence
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Compétence
+
+    put:
+      tags:
+        - Dashboard
+      summary: Modifier une compétence
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Competence'
+      responses:
+        '200':
+          description: Modifiée
+
+    delete:
+      tags:
+        - Dashboard
+      summary: Supprimer une compétence
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Supprimée
+
+  /dashboard/formations:
+    get:
+      tags:
+        - Dashboard
+      summary: Lister les formations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Formations
+
+    post:
+      tags:
+        - Dashboard
+      summary: Créer une formation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [school, degree]
+              properties:
+                school:
+                  type: string
+                degree:
+                  type: string
+                field:
+                  type: string
+                start_date:
+                  type: string
+                  format: date
+                end_date:
+                  type: string
+                  format: date
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Créée
+
+  /dashboard/formations/{id}:
+    get:
+      tags:
+        - Dashboard
+      summary: Détail d'une formation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Formation
+
+    put:
+      tags:
+        - Dashboard
+      summary: Modifier une formation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Formation'
+      responses:
+        '200':
+          description: Modifiée
+
+    delete:
+      tags:
+        - Dashboard
+      summary: Supprimer une formation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Supprimée
+
+  /dashboard/messages:
+    get:
+      tags:
+        - Dashboard
+      summary: Lister les messages (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Messages
+
+    post:
+      tags:
+        - Dashboard
+      summary: Créer un message
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, content]
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                active:
+                  type: boolean
+                display_from:
+                  type: string
+                  format: date-time
+                display_until:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Créé
+
+  /dashboard/messages/{id}:
+    get:
+      tags:
+        - Dashboard
+      summary: Détail d'un message
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Message
+
+    put:
+      tags:
+        - Dashboard
+      summary: Modifier un message
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportantMessage'
+      responses:
+        '200':
+          description: Modifié
+
+    patch:
+      tags:
+        - Dashboard
+      summary: Toggle activation d'un message
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Togglé
+
+    delete:
+      tags:
+        - Dashboard
+      summary: Supprimer un message
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Supprimé
+
+  /images/portfolio:
+    post:
+      tags:
+        - Images
+      summary: Upload photo de profil
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                photo:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: uploadée
+
+    delete:
+      tags:
+        - Images
+      summary: Supprimer photo de profil
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Supprimée
+
+  /images/projects/{projectId}:
+    get:
+      tags:
+        - Images
+      summary: Lister les images d'un projet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Galerie
+
+    post:
+      tags:
+        - Images
+      summary: Ajouter une image au projet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                description:
+                  type: string
+                order:
+                  type: integer
+      responses:
+        '201':
+          description: Ajoutée
+
+    put:
+      tags:
+        - Images
+      summary: Réordonner les images
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                images:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      order:
+                        type: integer
+      responses:
+        '200':
+          description: Réordonnées
+
+    delete:
+      tags:
+        - Images
+      summary: Supprimer les images d'un projet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Supprimées
+
+  /images/realisations/{realisationId}:
+    get:
+      tags:
+        - Images
+      summary: Lister les images d'une réalisation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: realisationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Galerie
+
+    post:
+      tags:
+        - Images
+      summary: Ajouter une image à la réalisation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: realisationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Ajoutée
+
+    delete:
+      tags:
+        - Images
+      summary: Supprimer les images d'une réalisation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: realisationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Supprimées
+
+  /images/companies/{companyId}:
+    post:
+      tags:
+        - Images
+      summary: Upload logo entreprise
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                logo:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Uploadé
+
+    delete:
+      tags:
+        - Images
+      summary: Supprimer logo entreprise
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Supprimé
+
+  /images/formations/{formationId}/logo:
+    post:
+      tags:
+        - Images
+      summary: Upload logo formation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: formationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                logo:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Uploadé
+
+  /images/formations/{formationId}/diploma:
+    post:
+      tags:
+        - Images
+      summary: Upload diplôme
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: formationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                diploma:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Uploadé

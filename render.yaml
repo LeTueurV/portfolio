@@ -22,6 +22,14 @@ services:
         value: sqlite
       - key: FILESYSTEM_DISK
         value: r2
+      - key: JWT_SECRET
+        sync: false  # À générer et remplir manuellement
+      - key: JWT_TTL
+        value: "60"
+      - key: JWT_REFRESH_TTL
+        value: "20160"
+      - key: JWT_ALGO
+        value: "HS256"
       
       # Cloudflare R2 - À configurer dans le dashboard Render
       - key: CLOUDFLARE_R2_ACCESS_KEY_ID
@@ -34,6 +42,13 @@ services:
         value: https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com
       - key: CLOUDFLARE_R2_PUBLIC_URL
         value: https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com
+    
+    # Commandes de déploiement
+    buildCommand: |
+      php artisan key:generate --force
+      php artisan jwt:secret --force
+      php artisan migrate --force
+      php artisan db:seed --force
     
     # Volume pour la base de données SQLite
     disk:

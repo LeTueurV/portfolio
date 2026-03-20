@@ -1,0 +1,762 @@
+openapi: 3.0.0
+info:
+  title: Portfolio API
+  description: API pour gérer et consulter le portfolio avec authentification JWT
+  version: 1.0.0
+  contact:
+    name: Support
+    url: https://portfolio.local
+
+servers:
+  - url: http://localhost:8000/api
+    description: Local development
+  - url: https://portfolio.render.com/api
+    description: Production
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Créer un nouveau compte
+      description: Inscrit un nouvel utilisateur (rôle "reader" par défaut)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+                - password_confirmation
+              properties:
+                name:
+                  type: string
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: "SecurePass123!"
+                password_confirmation:
+                  type: string
+                  format: password
+                  example: "SecurePass123!"
+      responses:
+        '201':
+          description: Utilisateur créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Validation échouée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Se connecter et obtenir un token JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "admin@portfolio.local"
+                password:
+                  type: string
+                  format: password
+                  example: "AdminPassword123!"
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  access_token:
+                    type: string
+                    example: "eyJ0eXAiOiJKV1QiLCJhbGc..."
+                  token_type:
+                    type: string
+                    example: "Bearer"
+                  expires_in:
+                    type: integer
+                    description: Durée de vie du token en secondes
+                    example: 3600
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Email ou mot de passe invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Rafraîchir le token JWT
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token rafraîchi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  expires_in:
+                    type: integer
+        '401':
+          description: Token invalide ou expiré
+
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Récupérer le profil utilisateur connecté
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profil obtenu
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Non authentifié
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Se déconnecter
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Déconnexion réussie
+
+  /portfolio:
+    get:
+      tags:
+        - Public API
+      summary: Récupérer les infos du portfolio
+      responses:
+        '200':
+          description: Portfolio trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portfolio'
+
+  /stages:
+    get:
+      tags:
+        - Public API
+      summary: Lister tous les stages
+      responses:
+        '200':
+          description: Liste des stages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stage'
+
+  /projects:
+    get:
+      tags:
+        - Public API
+      summary: Lister tous les projets
+      responses:
+        '200':
+          description: Liste des projets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+
+  /projects/{id}:
+    get:
+      tags:
+        - Public API
+      summary: Détail d'un projet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Projet trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetail'
+        '404':
+          description: Projet non trouvé
+
+  /realisations:
+    get:
+      tags:
+        - Public API
+      summary: Lister toutes les réalisations
+      responses:
+        '200':
+          description: Liste des réalisations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Realisation'
+
+  /realisations/{id}:
+    get:
+      tags:
+        - Public API
+      summary: Détail d'une réalisation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Réalisation trouvée
+        '404':
+          description: Réalisation non trouvée
+
+  /competences:
+    get:
+      tags:
+        - Public API
+      summary: Lister toutes les compétences
+      responses:
+        '200':
+          description: Liste des compétences
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Competence'
+
+  /companies:
+    get:
+      tags:
+        - Public API
+      summary: Lister toutes les entreprises
+      responses:
+        '200':
+          description: Liste des entreprises
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Company'
+
+  /formations:
+    get:
+      tags:
+        - Public API
+      summary: Lister toutes les formations
+      responses:
+        '200':
+          description: Liste des formations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Formation'
+
+  /all:
+    get:
+      tags:
+        - Public API
+      summary: Récupérer tous les données du portfolio
+      responses:
+        '200':
+          description: Toutes les données
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  portfolio:
+                    $ref: '#/components/schemas/Portfolio'
+                  stages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Stage'
+                  projects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  realisations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Realisation'
+                  companies:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Company'
+                  competences:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Competence'
+
+  /dashboard/portfolio:
+    get:
+      tags:
+        - Dashboard (Admin)
+      summary: Récupérer le portfolio (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Portfolio
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portfolio'
+        '401':
+          description: Non authentifié
+        '403':
+          description: Non autorisé
+
+    put:
+      tags:
+        - Dashboard (Admin)
+      summary: Modifier le portfolio
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                profile_picture_url:
+                  type: string
+                bio:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                github_url:
+                  type: string
+                linkedin_url:
+                  type: string
+      responses:
+        '200':
+          description: Portfolio modifié
+        '403':
+          description: Non autorisé
+
+  /dashboard/projects:
+    get:
+      tags:
+        - Dashboard (Admin)
+      summary: Lister les projets (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des projets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+
+    post:
+      tags:
+        - Dashboard (Admin)
+      summary: Créer un projet
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - type
+              properties:
+                title:
+                  type: string
+                type:
+                  type: string
+                  example: "web"
+                description:
+                  type: string
+                long_description:
+                  type: string
+                year:
+                  type: integer
+                company_id:
+                  type: integer
+      responses:
+        '201':
+          description: Projet créé
+        '422':
+          description: Validation échouée
+
+  /dashboard/projects/{id}:
+    get:
+      tags:
+        - Dashboard (Admin)
+      summary: Détail d'un projet (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Projet trouvé
+        '404':
+          description: Projet non trouvé
+
+    put:
+      tags:
+        - Dashboard (Admin)
+      summary: Modifier un projet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Projet modifié
+
+    delete:
+      tags:
+        - Dashboard (Admin)
+      summary: Supprimer un projet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Projet supprimé
+
+  /dashboard/stats:
+    get:
+      tags:
+        - Dashboard (Admin)
+      summary: Récupérer les statistiques
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Statistiques du portfolio
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [admin, reader]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    Portfolio:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        bio:
+          type: string
+        profile_picture_url:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        github_url:
+          type: string
+        linkedin_url:
+          type: string
+
+    Stage:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        company_id:
+          type: integer
+        company:
+          $ref: '#/components/schemas/Company'
+        competences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Competence'
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+        long_description:
+          type: string
+        year:
+          type: integer
+        company_id:
+          type: integer
+          nullable: true
+        company:
+          $ref: '#/components/schemas/Company'
+        tags:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              label:
+                type: string
+        competences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Competence'
+
+    ProjectDetail:
+      allOf:
+        - $ref: '#/components/schemas/Project'
+        - type: object
+          properties:
+            images:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  url:
+                    type: string
+                  description:
+                    type: string
+                  order:
+                    type: integer
+
+    Realisation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+        long_description:
+          type: string
+        company_id:
+          type: integer
+          nullable: true
+        company:
+          $ref: '#/components/schemas/Company'
+        tags:
+          type: array
+          items:
+            type: object
+        created_at:
+          type: string
+          format: date-time
+
+    Company:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        sector:
+          type: string
+        location:
+          type: string
+        website:
+          type: string
+        logo_url:
+          type: string
+
+    Competence:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+          example: "PHP"
+        label:
+          type: string
+          example: "PHP Backend"
+        bloc:
+          type: string
+
+    Formation:
+      type: object
+      properties:
+        id:
+          type: integer
+        school:
+          type: string
+        degree:
+          type: string
+        field:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        logo_url:
+          type: string
+        description:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        error:
+          type: string
+
+    ValidationError:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        errors:
+          type: object
