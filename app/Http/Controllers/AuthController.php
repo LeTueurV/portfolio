@@ -95,6 +95,11 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'Login failed',
                 'error' => $e->getMessage(),
+                'debug' => config('app.debug') ? [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString(),
+                ] : null,
             ], 500);
         }
     }
