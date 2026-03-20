@@ -19,9 +19,23 @@ return [
 
     'allowed_methods' => ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        'http://localhost',
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://localhost:8000',
+        'http://127.0.0.1',
+        'https://portfolio-mlb3.onrender.com'
 
-    'allowed_origins_patterns' => [],
+        // Production domains - à adapter
+        // 'https://your-frontend.vercel.app',
+        // 'https://your-frontend.netlify.app',
+    ],
+
+    'allowed_origins_patterns' => [
+        '#http://localhost.*#',
+        '#https://.*\.render\.com#', // Render deployments
+    ],
 
     'allowed_headers' => ['*'],
 
