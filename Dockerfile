@@ -96,8 +96,11 @@ RUN chmod -R 775 storage bootstrap/cache
 RUN rm -f public/storage || true
 
 ############################################
-# Container startup - Use Render PORT variable
+# Startup script (migrations + seeding + serve)
 ############################################
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 EXPOSE 8080
 
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
+CMD ["/app/start.sh"]

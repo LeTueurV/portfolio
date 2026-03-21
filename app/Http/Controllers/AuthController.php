@@ -90,15 +90,15 @@ class AuthController extends Controller
                 'expires_in' => config('jwt.ttl') * 60,
                 'user' => $user,
             ], 200);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Login failed',
                 'error' => $e->getMessage(),
                 'debug' => config('app.debug') ? [
+                    'class' => get_class($e),
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
-                    'trace' => $e->getTraceAsString(),
                 ] : null,
             ], 500);
         }

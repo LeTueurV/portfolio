@@ -13,7 +13,7 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: "false"
+        value: "true"   # Mettre à false une fois le débogage terminé
       - key: APP_KEY
         sync: false  # Généré automatiquement par php artisan key:generate
       - key: APP_URL
@@ -22,6 +22,8 @@ services:
           property: host
       - key: DB_CONNECTION
         value: sqlite
+      - key: DB_DATABASE
+        value: /app/database/database.sqlite
       - key: FILESYSTEM_DISK
         value: r2
       - key: JWT_SECRET
@@ -45,12 +47,7 @@ services:
       - key: CLOUDFLARE_R2_PUBLIC_URL
         value: https://a55c6e5cc8c8a996e287abce953ac92c.r2.cloudflarestorage.com
     
-    # Commandes de déploiement
-    buildCommand: |
-      php artisan key:generate --force
-      php artisan jwt:secret --force
-      php artisan migrate --force
-      php artisan db:seed --force
+    # Les migrations/seed sont gérés par start.sh au démarrage du container
     
     # Volume pour la base de données SQLite
     disk:
