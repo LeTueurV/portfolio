@@ -705,12 +705,47 @@ class DashboardApiController extends Controller
      */
     public function listRealisations(): JsonResponse
     {
-        $realisations = Realisation::with(['tags', 'company', 'images'])->get();
+        try {
+            $realisations = Realisation::with(['tags', 'company', 'images'])->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $realisations
-        ]);
+            // Transformer les données pour éviter les erreurs de sérialisation
+            $data = $realisations->map(function ($realisation) {
+                return [
+                    'id' => $realisation->id,
+                    'type' => $realisation->type,
+                    'company_id' => $realisation->company_id,
+                    'title' => $realisation->title,
+                    'description' => $realisation->description,
+                    'long_description' => $realisation->long_description,
+                    'created_at' => $realisation->created_at,
+                    'updated_at' => $realisation->updated_at,
+                    'company' => $realisation->company ? [
+                        'id' => $realisation->company->id,
+                        'name' => $realisation->company->name,
+                    ] : null,
+                    'tags' => $realisation->tags->map(fn($tag) => ['id' => $tag->id, 'tag' => $tag->tag])->values(),
+                    'images' => $realisation->images->map(fn($img) => [
+                        'id' => $img->id,
+                        'image_url' => $img->image_url,
+                        'caption' => $img->caption,
+                        'description' => $img->description,
+                        'order' => $img->order,
+                    ])->values(),
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error listing realisations: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Erreur lors du chargement des réalisations',
+                'debug' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
     }
 
     /**
@@ -718,19 +753,52 @@ class DashboardApiController extends Controller
      */
     public function getRealisation(int $id): JsonResponse
     {
-        $realisation = Realisation::with(['tags', 'company', 'images'])->find($id);
+        try {
+            $realisation = Realisation::with(['tags', 'company', 'images'])->find($id);
 
-        if (!$realisation) {
+            if (!$realisation) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Réalisation non trouvée'
+                ], 404);
+            }
+
+            // Transformer les données pour éviter les erreurs de sérialisation
+            $data = [
+                'id' => $realisation->id,
+                'type' => $realisation->type,
+                'company_id' => $realisation->company_id,
+                'title' => $realisation->title,
+                'description' => $realisation->description,
+                'long_description' => $realisation->long_description,
+                'created_at' => $realisation->created_at,
+                'updated_at' => $realisation->updated_at,
+                'company' => $realisation->company ? [
+                    'id' => $realisation->company->id,
+                    'name' => $realisation->company->name,
+                ] : null,
+                'tags' => $realisation->tags->map(fn($tag) => ['id' => $tag->id, 'tag' => $tag->tag])->values(),
+                'images' => $realisation->images->map(fn($img) => [
+                    'id' => $img->id,
+                    'image_url' => $img->image_url,
+                    'caption' => $img->caption,
+                    'description' => $img->description,
+                    'order' => $img->order,
+                ])->values(),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error getting realisation ' . $id . ': ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'error' => 'Réalisation non trouvée'
-            ], 404);
+                'error' => 'Erreur lors du chargement de la réalisation',
+                'debug' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'data' => $realisation
-        ]);
     }
 
     /**

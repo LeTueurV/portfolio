@@ -73,6 +73,9 @@ return [
             'metadata' => [],
             'throw' => true,  // doit être true pour propager les vraies erreurs R2
             'report' => false,
+            // Fix SSL certificate issues on Laragon/Windows development
+            // Set to false for local development with missing cacert.pem
+            'verify' => env('AWS_VERIFY_SSL', true),
         ],
 
     ],
