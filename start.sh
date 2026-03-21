@@ -17,4 +17,8 @@ if [ -z "$JWT_SECRET" ]; then
 fi
 
 echo "[startup] Démarrage du serveur sur le port ${PORT:-8080}..."
-exec php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
+exec php \
+    -d upload_max_filesize=10M \
+    -d post_max_size=12M \
+    -d memory_limit=256M \
+    artisan serve --host=0.0.0.0 --port=${PORT:-8080}
