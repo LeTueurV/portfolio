@@ -80,15 +80,37 @@ class ImageUploadService
         // Générer le nom du fichier
         $filename = $this->generateFilename($prefix, $extension);
 
+        // Vérifier que le fichier PHP est valide avant tout
+        if (!$file->isValid()) {
+            $phpError = $file->getError();
+            $phpMessages = [
+                UPLOAD_ERR_INI_SIZE   => 'Fichier trop volumineux (limite php.ini)',
+                UPLOAD_ERR_FORM_SIZE  => 'Fichier trop volumineux (limite formulaire)',
+                UPLOAD_ERR_PARTIAL    => 'Fichier partiellement uploadé',
+                UPLOAD_ERR_NO_FILE    => 'Aucun fichier envoyé',
+                UPLOAD_ERR_NO_TMP_DIR => 'Dossier temporaire manquant',
+                UPLOAD_ERR_CANT_WRITE => 'Impossible d\'écrire le fichier temporaire',
+                UPLOAD_ERR_EXTENSION  => 'Upload bloqué par une extension PHP',
+            ];
+            $msg = $phpMessages[$phpError] ?? "Erreur PHP upload (code {$phpError})";
+            return ['success' => false, 'url' => null, 'error' => $msg];
+        }
+
         try {
-            // Vérifier que le disque R2 existe et est configuré
-            if (!config('filesystems.disks.r2')) {
-                throw new \Exception('Disque R2 non configuré. Vérifiez filesystems.php');
+            // Vérifier que le disque R2 est configuré
+            $r2Config = config('filesystems.disks.r2');
+            if (!$r2Config || empty($r2Config['key']) || empty($r2Config['bucket'])) {
+                throw new \Exception('Disque R2 non configuré — vérifiez CLOUDFLARE_R2_* dans les variables d\'environnement');
             }
 
             // Stocker le fichier sur Cloudflare R2
             $path = $file->storeAs($folder, $filename, 'r2');
-            
+
+            // storeAs() retourne false si throw:false et que R2 échoue
+            if ($path === false || $path === null) {
+                throw new \Exception('R2 a refusé l\'upload (bucket inaccessible ou credentials invalides)');
+            }
+
             // Récupérer l'URL publique du fichier
             $url = Storage::disk('r2')->url($path);
 
@@ -102,16 +124,18 @@ class ImageUploadService
         } catch (\Exception $e) {
             \Log::error('ImageUpload Error', [
                 'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'folder' => $folder,
-                'filename' => $filename ?? 'unknown'
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+                'folder'  => $folder,
+                'filename'=> $filename ?? 'unknown',
+                'r2_bucket'   => config('filesystems.disks.r2.bucket'),
+                'r2_endpoint' => config('filesystems.disks.r2.endpoint'),
             ]);
-            
+
             return [
                 'success' => false,
                 'url' => null,
-                'error' => "Erreur lors de l'upload: " . $e->getMessage()
+                'error' => $e->getMessage()
             ];
         }
     }

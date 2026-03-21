@@ -71,7 +71,7 @@ return [
             'use_path_style_endpoint' => false,
             'visibility' => 'public',
             'metadata' => [],
-            'throw' => false,
+            'throw' => true,  // doit être true pour propager les vraies erreurs R2
             'report' => false,
         ],
 
