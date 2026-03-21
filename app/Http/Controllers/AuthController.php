@@ -7,7 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Tymon\JWTAuth\Facades\JwtAuth;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -73,14 +73,14 @@ class AuthController extends Controller
         try {
             $credentials = $request->only(['email', 'password']);
             
-            if (!$token = JwtAuth::attempt($credentials)) {
+            if (!$token = JWTAuth::attempt($credentials)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid email or password',
                 ], 401);
             }
 
-            $user = JwtAuth::user();
+            $user = JWTAuth::user();
 
             return response()->json([
                 'success' => true,
@@ -110,7 +110,7 @@ class AuthController extends Controller
     public function refresh(): JsonResponse
     {
         try {
-            $token = JwtAuth::refresh();
+            $token = JWTAuth::refresh();
 
             return response()->json([
                 'success' => true,
@@ -134,7 +134,7 @@ class AuthController extends Controller
     public function logout(): JsonResponse
     {
         try {
-            JwtAuth::logout();
+            JWTAuth::logout();
 
             return response()->json([
                 'success' => true,
@@ -155,7 +155,7 @@ class AuthController extends Controller
     public function me(): JsonResponse
     {
         try {
-            $user = JwtAuth::user();
+            $user = JWTAuth::user();
 
             return response()->json([
                 'success' => true,

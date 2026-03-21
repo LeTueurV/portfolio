@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\JwtAuth;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Symfony\Component\HttpFoundation\Response;
 
 class JwtMiddleware
@@ -15,7 +15,7 @@ class JwtMiddleware
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
         try {
-            $user = JwtAuth::parseToken()->authenticate();
+            $user = JWTAuth::parseToken()->authenticate();
             
             // Si des rôles sont spécifiés, vérifier si l'utilisateur a un des rôles
             if (!empty($roles)) {
