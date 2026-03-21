@@ -25,16 +25,15 @@ return [
         'http://localhost:5173',
         'http://localhost:8000',
         'http://127.0.0.1',
-        'https://portfolio-mlb3.onrender.com'
-
-        // Production domains - à adapter
-        // 'https://your-frontend.vercel.app',
-        // 'https://your-frontend.netlify.app',
+        'https://portfolio-mlb3.onrender.com',
+        'https://erbloic.github.io',
+        'null', // fichier local ouvert en file://
     ],
 
     'allowed_origins_patterns' => [
         '#http://localhost.*#',
-        '#https://.*\.onrender\.com#', // Render deployments
+        '#https://.*\.onrender\.com#',
+        '#https://.*\.github\.io#',
     ],
 
     'allowed_headers' => ['*'],
