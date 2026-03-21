@@ -20,6 +20,7 @@ class Portfolio extends Model
         'year_start',
         'year_end',
         'contact_message',
+        'cv_url',
     ];
 
     public function getFullNameAttribute(): string

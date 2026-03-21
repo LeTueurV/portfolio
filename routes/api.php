@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\DashboardApiController;
 use App\Http\Middleware\JwtMiddleware;
@@ -132,6 +133,9 @@ Route::get('/all', [ApiController::class, 'all']);
 
 // Messages importants actifs (pour l'affichage public)
 Route::get('/messages', [DashboardApiController::class, 'listActiveMessages']);
+
+// Formulaire de contact (public)
+Route::post('/contact', [ContactController::class, 'send']);
 
 // ==========================================
 // ROUTES DASHBOARD PROTÉGÉES (CRUD complet - Admin seulement)

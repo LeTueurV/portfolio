@@ -53,6 +53,7 @@ class DashboardApiController extends Controller
             'year_start' => 'nullable|integer|min:1900|max:2100',
             'year_end' => 'nullable|integer|min:1900|max:2100',
             'contact_message' => 'nullable|string|max:2000',
+            'cv_url' => 'nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {
