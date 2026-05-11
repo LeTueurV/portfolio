@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\Competence;
 use App\Models\Formation;
 use App\Models\ImportantMessage;
+use App\Models\PersonalProject;
 use App\Models\Portfolio;
 use App\Models\Project;
 use App\Models\ProjectTag;
@@ -974,12 +975,16 @@ class DashboardApiController extends Controller
                 'stages_count' => Stage::count(),
                 'formations_count' => Formation::count(),
                 'projects_count' => Project::count(),
+                'personal_projects_count' => PersonalProject::count(),
                 'realisations_count' => Realisation::count(),
                 'competences_count' => Competence::count(),
                 'messages_count' => ImportantMessage::count(),
                 'active_messages_count' => ImportantMessage::active()->count(),
                 'recent_projects' => Project::with('company')
                     ->orderBy('created_at', 'desc')
+                    ->limit(5)
+                    ->get(),
+                'recent_personal_projects' => PersonalProject::orderBy('created_at', 'desc')
                     ->limit(5)
                     ->get(),
                 'recent_realisations' => Realisation::with('company')

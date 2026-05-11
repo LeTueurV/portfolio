@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Portfolio;
 use App\Models\Stage;
 use App\Models\Project;
+use App\Models\PersonalProject;
 use App\Models\Realisation;
 use App\Models\Company;
 use App\Models\Competence;
@@ -27,6 +28,16 @@ class ApiController extends Controller
     public function projects(): JsonResponse
     {
         $projects = Project::with('tags', 'competences', 'company')->get();
+        return response()->json($projects);
+    }
+
+    public function personalProjects(): JsonResponse
+    {
+        $projects = PersonalProject::with('tags', 'images')
+            ->orderBy('order')
+            ->orderBy('year', 'desc')
+            ->get();
+
         return response()->json($projects);
     }
 
@@ -53,6 +64,7 @@ class ApiController extends Controller
         $portfolio = Portfolio::first();
         $stages = Stage::with('company', 'competences')->get();
         $projects = Project::with('tags', 'competences', 'company')->get();
+        $personalProjects = PersonalProject::with('tags', 'images')->orderBy('order')->orderBy('year', 'desc')->get();
         $realisations = Realisation::with('tags', 'company')->get();
         $companies = Company::all();
         $competences = Competence::all();
@@ -64,6 +76,7 @@ class ApiController extends Controller
             'portfolio' => $portfolio,
             'stages' => $stages,
             'projects' => $projects,
+            'personalProjects' => $personalProjects,
             'realisations' => $realisations,
             'companies' => $companies,
             'competences' => $competences,

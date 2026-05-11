@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\Formation;
 use App\Models\Portfolio;
+use App\Models\PersonalProject;
+use App\Models\PersonalProjectImage;
 use App\Models\Project;
 use App\Models\ProjectImage;
 use App\Models\Realisation;
@@ -570,6 +572,211 @@ class ImageUploadController extends Controller
             DB::rollBack();
             Log::error("Project {$projectId} order update error: " . $e->getMessage());
             return $this->errorResponse('Erreur lors de la mise à jour de l\'ordre: ' . $e->getMessage(), 500);
+        }
+    }
+
+    // ==========================================
+    // PERSONAL PROJECTS (Galerie d'images)
+    // ==========================================
+
+    public function listPersonalProjectImages(int $projectId): JsonResponse
+    {
+        try {
+            $project = PersonalProject::with('images')->find($projectId);
+            if (!$project) {
+                return $this->errorResponse('Projet perso non trouve', 404);
+            }
+
+            return $this->successResponse($project->images, 'Images du projet perso recuperees');
+        } catch (\Exception $e) {
+            Log::error("Personal project {$projectId} images list error: " . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la recuperation des images', 500);
+        }
+    }
+
+    public function getPersonalProjectImage(int $imageId): JsonResponse
+    {
+        try {
+            $image = PersonalProjectImage::find($imageId);
+            if (!$image) {
+                return $this->errorResponse('Image non trouvee', 404);
+            }
+
+            return $this->successResponse($image, 'Image recuperee');
+        } catch (\Exception $e) {
+            Log::error("Get personal project image {$imageId} error: " . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la recuperation de l\'image', 500);
+        }
+    }
+
+    public function uploadPersonalProjectImage(Request $request, int $projectId): JsonResponse
+    {
+        try {
+            $request->validate([
+                'image' => 'required|image|mimes:' . self::ALLOWED_IMAGE_MIMES . '|max:' . self::MAX_IMAGE_SIZE,
+                'caption' => 'nullable|string|max:255',
+                'description' => 'nullable|string|max:5000',
+            ]);
+
+            $project = PersonalProject::find($projectId);
+            if (!$project) {
+                return $this->errorResponse('Projet perso non trouve', 404);
+            }
+
+            $result = $this->uploadService->upload(
+                $request->file('image'),
+                'personal-projects',
+                "personal_project_{$projectId}"
+            );
+
+            if (!$result['success']) {
+                Log::warning("Personal project {$projectId} image upload failed: " . $result['error']);
+                return $this->errorResponse($result['error']);
+            }
+
+            $maxOrder = PersonalProjectImage::where('personal_project_id', $projectId)->max('order') ?? 0;
+
+            $image = PersonalProjectImage::create([
+                'personal_project_id' => $projectId,
+                'image_url' => $result['url'],
+                'caption' => $request->input('caption'),
+                'description' => $request->input('description'),
+                'order' => $maxOrder + 1,
+            ]);
+
+            return $this->successResponse($image, 'Image ajoutee avec succes', 201);
+        } catch (\Exception $e) {
+            Log::error("Personal project {$projectId} image upload error: " . $e->getMessage());
+            return $this->errorResponse('Erreur lors de l\'upload: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function updatePersonalProjectImage(Request $request, int $imageId): JsonResponse
+    {
+        try {
+            $request->validate([
+                'image' => 'sometimes|nullable|image|mimes:' . self::ALLOWED_IMAGE_MIMES . '|max:' . self::MAX_IMAGE_SIZE,
+                'caption' => 'sometimes|nullable|string|max:255',
+                'description' => 'sometimes|nullable|string|max:5000',
+            ]);
+
+            $image = PersonalProjectImage::find($imageId);
+            if (!$image) {
+                return $this->errorResponse('Image non trouvee', 404);
+            }
+
+            if (!$request->hasFile('image') && !$request->exists('caption') && !$request->exists('description')) {
+                return $this->errorResponse('Aucune donnee a mettre a jour', 422);
+            }
+
+            $updates = [];
+
+            if ($request->hasFile('image')) {
+                $result = $this->uploadService->replace(
+                    $request->file('image'),
+                    $image->image_url,
+                    'personal-projects',
+                    "personal_project_{$image->personal_project_id}"
+                );
+
+                if (!$result['success']) {
+                    Log::warning("Personal project image {$imageId} replace failed: " . $result['error']);
+                    return $this->errorResponse($result['error']);
+                }
+
+                $updates['image_url'] = $result['url'];
+            }
+
+            if ($request->exists('caption')) {
+                $updates['caption'] = $request->input('caption');
+            }
+
+            if ($request->exists('description')) {
+                $updates['description'] = $request->input('description');
+            }
+
+            $image->update($updates);
+
+            return $this->successResponse($image->fresh(), 'Image mise a jour avec succes');
+        } catch (\Exception $e) {
+            Log::error("Personal project image {$imageId} update error: " . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la mise a jour: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function deletePersonalProjectImage(int $imageId): JsonResponse
+    {
+        try {
+            $image = PersonalProjectImage::find($imageId);
+            if (!$image) {
+                return $this->errorResponse('Image non trouvee', 404);
+            }
+
+            $this->uploadService->delete($image->image_url);
+            $image->delete();
+
+            return $this->successResponse(null, 'Image supprimee avec succes');
+        } catch (\Exception $e) {
+            Log::error("Personal project image {$imageId} delete error: " . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la suppression: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function deletePersonalProjectImages(Request $request, int $projectId): JsonResponse
+    {
+        try {
+            $request->validate([
+                'image_ids' => 'required|array|min:1',
+                'image_ids.*' => 'required|integer',
+            ]);
+
+            $images = PersonalProjectImage::where('personal_project_id', $projectId)
+                ->whereIn('id', $request->input('image_ids'))
+                ->get();
+
+            if ($images->isEmpty()) {
+                return $this->errorResponse('Aucune image trouvee', 404);
+            }
+
+            foreach ($images as $image) {
+                $this->uploadService->delete($image->image_url);
+                $image->delete();
+            }
+
+            return $this->successResponse(['deleted_count' => $images->count()], 'Images supprimees avec succes');
+        } catch (\Exception $e) {
+            Log::error("Personal project {$projectId} batch delete error: " . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la suppression: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function updatePersonalProjectImagesOrder(Request $request, int $projectId): JsonResponse
+    {
+        try {
+            $request->validate([
+                'images' => 'required|array|min:1',
+                'images.*.id' => 'required|integer',
+                'images.*.order' => 'required|integer|min:1',
+            ]);
+
+            $project = PersonalProject::find($projectId);
+            if (!$project) {
+                return $this->errorResponse('Projet perso non trouve', 404);
+            }
+
+            DB::beginTransaction();
+            foreach ($request->input('images') as $imageData) {
+                PersonalProjectImage::where('id', $imageData['id'])
+                    ->where('personal_project_id', $projectId)
+                    ->update(['order' => $imageData['order']]);
+            }
+            DB::commit();
+
+            return $this->successResponse(null, 'Ordre des images mis a jour');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Personal project {$projectId} order update error: " . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la mise a jour de l\'ordre: ' . $e->getMessage(), 500);
         }
     }
 

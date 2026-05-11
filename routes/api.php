@@ -7,6 +7,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\DashboardApiController;
+use App\Http\Controllers\ManifestController;
+use App\Http\Controllers\PersonalProjectController;
 use App\Http\Middleware\JwtMiddleware;
 
 // Route ping pour garder le serveur éveillé
@@ -17,6 +19,7 @@ Route::get('/ping', function () {
         'timestamp' => now()->toISOString()
     ]);
 });
+Route::get('/manifest', ManifestController::class)->name('api.manifest');
 
 // Route pour Swagger/OpenAPI documentation (dynamique, basée sur APP_URL)
 Route::get('/docs', function () {
@@ -123,6 +126,8 @@ Route::get('/stages', [ApiController::class, 'stages']);
 Route::get('/formations', [DashboardApiController::class, 'listFormations']);
 Route::get('/projects', [ApiController::class, 'projects']);
 Route::get('/projects/{id}', [ApiController::class, 'projectDetail']);
+Route::get('/personal-projects', [PersonalProjectController::class, 'index'])->name('personal-projects.index');
+Route::get('/personal-projects/{id}', [PersonalProjectController::class, 'show'])->name('personal-projects.show');
 Route::get('/realisations', [ApiController::class, 'realisations']);
 Route::get('/realisations/{id}', [ApiController::class, 'realisationDetail']);
 Route::get('/companies', [ApiController::class, 'companies']);
@@ -178,6 +183,13 @@ Route::prefix('dashboard')->middleware(['App\\Http\\Middleware\\JwtMiddleware:ad
     Route::post('/projects', [DashboardApiController::class, 'createProject']);
     Route::put('/projects/{id}', [DashboardApiController::class, 'updateProject']);
     Route::delete('/projects/{id}', [DashboardApiController::class, 'deleteProject']);
+
+    // Personal Projects
+    Route::get('/personal-projects', [PersonalProjectController::class, 'dashboardIndex']);
+    Route::get('/personal-projects/{id}', [PersonalProjectController::class, 'dashboardShow']);
+    Route::post('/personal-projects', [PersonalProjectController::class, 'store']);
+    Route::put('/personal-projects/{id}', [PersonalProjectController::class, 'update']);
+    Route::delete('/personal-projects/{id}', [PersonalProjectController::class, 'destroy']);
 
     // Realisations
     Route::get('/realisations', [DashboardApiController::class, 'listRealisations']);
@@ -265,6 +277,20 @@ Route::prefix('images')->middleware(['App\\Http\\Middleware\\JwtMiddleware:admin
     });
 
     // ==========================================
+    // PERSONAL PROJECTS - Galerie d'images
+    // ==========================================
+    Route::prefix('personal-projects')->group(function () {
+        Route::get('/{projectId}', [ImageUploadController::class, 'listPersonalProjectImages']);
+        Route::post('/{projectId}', [ImageUploadController::class, 'uploadPersonalProjectImage']);
+        Route::delete('/{projectId}', [ImageUploadController::class, 'deletePersonalProjectImages']);
+        Route::put('/{projectId}/order', [ImageUploadController::class, 'updatePersonalProjectImagesOrder']);
+
+        Route::get('/image/{imageId}', [ImageUploadController::class, 'getPersonalProjectImage']);
+        Route::put('/image/{imageId}', [ImageUploadController::class, 'updatePersonalProjectImage']);
+        Route::delete('/image/{imageId}', [ImageUploadController::class, 'deletePersonalProjectImage']);
+    });
+
+    // ==========================================
     // REALISATIONS - Galerie d'images
     // ==========================================
     Route::prefix('realisations')->group(function () {
@@ -288,4 +314,3 @@ Route::prefix('images')->middleware(['App\\Http\\Middleware\\JwtMiddleware:admin
 // Routes legacy pour compatibilité
 Route::put('/projects/{id}/description', [ImageUploadController::class, 'updateProjectLongDescription']);
 Route::put('/realisations/{id}/description', [ImageUploadController::class, 'updateRealisationLongDescription']);
-

@@ -25,7 +25,9 @@ tags:
   - name: Images
     description: Gestion des images (upload, modif, suppression - nécessite rôle admin)
   - name: Health
-    description: Endpoints de santé et debug
+    description: Endpoints de sante et debug
+  - name: Manifest
+    description: Manifest des routes API pour recensement externe
 
 components:
   securitySchemes:
@@ -153,6 +155,92 @@ components:
         company:
           $ref: '#/components/schemas/Company'
 
+    PersonalProject:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          example: "Mon portfolio interactif"
+        type:
+          type: string
+          example: "Application Web"
+        description:
+          type: string
+        long_description:
+          type: string
+        year:
+          type: string
+          example: "2026"
+        github_url:
+          type: string
+          format: uri
+          nullable: true
+        demo_url:
+          type: string
+          format: uri
+          nullable: true
+        order:
+          type: integer
+        is_featured:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              tag:
+                type: string
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonalProjectImage'
+
+    PersonalProjectImage:
+      type: object
+      properties:
+        id:
+          type: integer
+        personal_project_id:
+          type: integer
+        image_url:
+          type: string
+        caption:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        order:
+          type: integer
+
+    ManifestRoute:
+      type: object
+      properties:
+        method:
+          type: string
+          example: "GET"
+        uri:
+          type: string
+          example: "/api/personal-projects"
+        name:
+          type: string
+          nullable: true
+        action:
+          type: string
+          example: "PersonalProjectController@index"
+        middleware:
+          type: array
+          items:
+            type: string
+        parameters:
+          type: array
+          items:
+            type: string
+
     Realisation:
       type: object
       properties:
@@ -225,6 +313,28 @@ paths:
       responses:
         '200':
           description: API en ligne
+
+  /manifest:
+    get:
+      tags:
+        - Manifest
+      summary: Manifest des routes API
+      description: Liste dynamique des routes API pour les recenser dans un autre projet.
+      responses:
+        '200':
+          description: Manifest des routes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: "Portfolio API"
+                  routes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ManifestRoute'
 
   /auth/register:
     post:
@@ -404,6 +514,42 @@ paths:
           description: Projet avec images
         '404':
           description: Non trouvé
+
+  /personal-projects:
+    get:
+      tags:
+        - Public
+      summary: Lister les projets personnels
+      responses:
+        '200':
+          description: Projets personnels avec tags et images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonalProject'
+
+  /personal-projects/{id}:
+    get:
+      tags:
+        - Public
+      summary: Detail d'un projet personnel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Projet personnel avec images
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalProject'
+        '404':
+          description: Non trouve
 
   /realisations:
     get:
@@ -743,6 +889,114 @@ paths:
       responses:
         '204':
           description: Supprimé
+
+  /dashboard/personal-projects:
+    get:
+      tags:
+        - Dashboard
+      summary: Lister les projets personnels (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Projets personnels
+
+    post:
+      tags:
+        - Dashboard
+      summary: Creer un projet personnel
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                type:
+                  type: string
+                description:
+                  type: string
+                long_description:
+                  type: string
+                year:
+                  type: string
+                github_url:
+                  type: string
+                  format: uri
+                demo_url:
+                  type: string
+                  format: uri
+                order:
+                  type: integer
+                is_featured:
+                  type: boolean
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Cree
+
+  /dashboard/personal-projects/{id}:
+    get:
+      tags:
+        - Dashboard
+      summary: Detail d'un projet personnel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Projet personnel
+
+    put:
+      tags:
+        - Dashboard
+      summary: Modifier un projet personnel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonalProject'
+      responses:
+        '200':
+          description: Modifie
+
+    delete:
+      tags:
+        - Dashboard
+      summary: Supprimer un projet personnel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Supprime
 
   /dashboard/stages:
     get:
@@ -1363,6 +1617,180 @@ paths:
       responses:
         '204':
           description: Supprimées
+
+  /images/personal-projects/{projectId}:
+    get:
+      tags:
+        - Images
+      summary: Lister les images d'un projet personnel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Galerie
+
+    post:
+      tags:
+        - Images
+      summary: Ajouter une image au projet personnel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+                caption:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Ajoutee
+
+    delete:
+      tags:
+        - Images
+      summary: Supprimer plusieurs images d'un projet personnel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [image_ids]
+              properties:
+                image_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Images supprimees
+
+  /images/personal-projects/{projectId}/order:
+    put:
+      tags:
+        - Images
+      summary: Reordonner les images d'un projet personnel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [images]
+              properties:
+                images:
+                  type: array
+                  items:
+                    type: object
+                    required: [id, order]
+                    properties:
+                      id:
+                        type: integer
+                      order:
+                        type: integer
+      responses:
+        '200':
+          description: Images reordonnees
+
+  /images/personal-projects/image/{imageId}:
+    get:
+      tags:
+        - Images
+      summary: Recuperer une image de projet personnel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Image
+
+    put:
+      tags:
+        - Images
+      summary: Modifier une image de projet personnel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                caption:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Image modifiee
+
+    delete:
+      tags:
+        - Images
+      summary: Supprimer une image de projet personnel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Image supprimee
 
   /images/realisations/{realisationId}:
     get:
